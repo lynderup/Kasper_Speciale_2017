@@ -1,2 +1,12 @@
 
 *.idea/*
+
+# Latex compile files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.pdf
+*.xml
+*.synctex.gz
