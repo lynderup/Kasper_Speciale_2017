@@ -1,4 +1,7 @@
+import numpy as np
+
 import dataprovider.read_fasta as read_fasta
+
 from dataprovider.dataset_provider import DatasetProvider
 
 structure_dict = {"1": DatasetProvider.INSIDE,
@@ -13,7 +16,7 @@ class TMSEGDatasetProvider(DatasetProvider):
 
     @classmethod
     def encode_structure(cls, structure):
-        return [structure_dict[z] for z in structure]
+        return np.asarray([structure_dict[z] for z in structure])
 
     @classmethod
     def decode_structure(cls, structure):
@@ -56,3 +59,5 @@ if __name__ == '__main__':
 
     for entry in dataset:
         print(entry)
+        # print(entry.sequence)
+        # print(entry.structure)

@@ -1,3 +1,5 @@
+import numpy as np
+
 from collections import namedtuple
 
 observables = ['A', 'C', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'M', 'L', 'N', 'Q', 'P', 'S', 'R', 'T', 'W', 'V', 'Y']
@@ -12,7 +14,7 @@ class DatasetProvider:
 
     @classmethod
     def encode_sequence(cls, sequence):
-        return [observables.index(x) for x in sequence]
+        return np.asarray([observables.index(x) for x in sequence])
 
     @classmethod
     def decode_sequence(cls, sequence):
