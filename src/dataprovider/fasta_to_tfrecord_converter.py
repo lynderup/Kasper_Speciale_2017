@@ -1,4 +1,5 @@
-import numpy as np
+import os
+import shutil
 import tensorflow as tf
 
 import dataprovider.read_fasta as read_fasta
@@ -34,6 +35,10 @@ def fasta_entry_to_example(fasta_entry):
 
     return example
 
+def clear_path(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
 
 def fasta_to_tfrecord():
     path = "datasets/tmseg/"
@@ -50,6 +55,7 @@ def fasta_to_tfrecord():
 
     sets = [opm_set1, opm_set2, opm_set3, opm_set4]
 
+    clear_path(tfrecord_path)
     for set in sets:
         fasta_entries = read_fasta.read_fasta(fasta_filename(set))
 
