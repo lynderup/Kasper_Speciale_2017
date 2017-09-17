@@ -1,10 +1,7 @@
-import os
-import shutil
 import tensorflow as tf
 
 import dataprovider.read_fasta as read_fasta
 
-from collections import namedtuple
 
 observables = ['A', 'C', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'M', 'L', 'N', 'Q', 'P', 'S', 'R', 'T', 'W', 'V', 'Y']
 
@@ -35,27 +32,13 @@ def fasta_entry_to_example(fasta_entry):
 
     return example
 
-def clear_path(path):
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    os.makedirs(path)
 
-def fasta_to_tfrecord():
-    path = "datasets/tmseg/"
-    fasta_path = "unmasked_hval0/"
-    tfrecord_path = "tfrecords/"
+def fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets):
 
-    opm_set1 = "opm_set1"
-    opm_set2 = "opm_set2"
-    opm_set3 = "opm_set3"
-    opm_set4 = "opm_set4"
+    def fasta_filename(set): return "".join([path, fasta_path, set, ".fasta"])
 
-    def fasta_filename(set) :  return "".join([path, fasta_path, set, ".fasta"])
-    def tfrecord_filename(set) : return "".join([path, tfrecord_path, set, ".tfrecord"])
+    def tfrecord_filename(set): return "".join([path, tfrecord_path, set, ".tfrecord"])
 
-    sets = [opm_set1, opm_set2, opm_set3, opm_set4]
-
-    clear_path(tfrecord_path)
     for set in sets:
         fasta_entries = read_fasta.read_fasta(fasta_filename(set))
 
