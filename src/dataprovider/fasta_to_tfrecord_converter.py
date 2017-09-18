@@ -26,9 +26,20 @@ def fasta_entry_to_example(fasta_entry):
     # structure = np.asarray([structure_dict[z] for z in entry_parts[2]])
     structure = [structure_dict[z] for z in entry_parts[2]]
 
-    feature = {'sequence': tf.train.Feature(int64_list=tf.train.Int64List(value=sequence)),
-               'structure': tf.train.Feature(int64_list=tf.train.Int64List(value=structure))}
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    context = {'length': tf.train.Feature(int64_list=tf.train.Int64List(value=[len(sequence)]))}
+
+    sequence_feature_list = []
+    structure_feature_list = []
+
+    for seq, struc in zip(sequence, structure):
+        sequence_feature_list.append(tf.train.Feature(int64_list=tf.train.Int64List(value=[seq])))
+        structure_feature_list.append(tf.train.Feature(int64_list=tf.train.Int64List(value=[struc])))
+
+    feature_list = {'sequence': tf.train.FeatureList(feature=sequence_feature_list),
+                    'structure': tf.train.FeatureList(feature=structure_feature_list)}
+
+    example = tf.train.SequenceExample(context=tf.train.Features(feature=context),
+                                       feature_lists=tf.train.FeatureLists(feature_list=feature_list))
 
     return example
 
@@ -46,7 +57,6 @@ def fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets):
 
             for entry in fasta_entries:
                 example = fasta_entry_to_example(entry)
-
                 writer.write(example.SerializeToString())
 
 
