@@ -11,3 +11,6 @@
 *.xml
 *.synctex.gz
 *.toc
+
+# Datasets
+*datasets/*
