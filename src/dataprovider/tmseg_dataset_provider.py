@@ -11,8 +11,8 @@ def _parse_function(example_proto):
         "length": tf.FixedLenFeature([1], dtype=tf.int64)
     }
     sequence_features = {
-        "sequence": tf.FixedLenSequenceFeature([1], dtype=tf.int64),
-        "structure": tf.FixedLenSequenceFeature([1], dtype=tf.int64)
+        "sequence": tf.FixedLenSequenceFeature([], dtype=tf.int64),
+        "structure": tf.FixedLenSequenceFeature([], dtype=tf.int64)
     }
 
     context_parsed, sequence_parsed = tf.parse_single_sequence_example(serialized=example_proto,
@@ -51,7 +51,8 @@ class TMSEGDatasetProvider(DatasetProvider):
             fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets)
 
     @staticmethod
-    def get_dataset():
+    def get_dataset(batch_size):
+
         dataset_path = "datasets/tmseg/data/sets/tfrecords/"
         filename_suffix = ".tfrecord"
         filenames = ["opm_set1", "opm_set2", "opm_set3"]
@@ -60,16 +61,21 @@ class TMSEGDatasetProvider(DatasetProvider):
 
         dataset = tf.contrib.data.TFRecordDataset(paths)
         dataset = dataset.map(_parse_function)
+        dataset = dataset.padded_batch(batch_size, padded_shapes=([1], [None], [None]))
 
-        iterator = dataset.make_initializable_iterator()
-        example = iterator.get_next()
-        print(example)
-
-        with tf.Session() as sess:
-            sess.run(iterator.initializer)
-            print(sess.run(example))
+        return dataset
 
 
 if __name__ == '__main__':
     TMSEGDatasetProvider.download_and_convert_if_not_existing()
-    TMSEGDatasetProvider.get_dataset()
+    dataset = TMSEGDatasetProvider.get_dataset(4)
+
+    iterator = dataset.make_initializable_iterator()
+    length, sequence, structure = iterator.get_next()
+
+    with tf.Session() as sess:
+        sess.run(iterator.initializer)
+
+        print(sess.run(length))
+        print(sess.run(sequence))
+        print(sess.run(structure))
