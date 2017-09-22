@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 from dataprovider.tmseg_dataset_provider import TMSEGDatasetProvider
 
@@ -47,6 +48,7 @@ class Model:
         structures = tf.transpose(structures, perm=[1, 0])
 
         self.sequences = sequences
+        self.structures = structures
 
         embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units], dtype=tf.float32)
 
@@ -99,13 +101,17 @@ class Model:
                                                    config.decay_rate,
                                                    staircase=True)
 
+        trainable_vars = tf.trainable_variables()
+
+        self.saver = tf.train.Saver(trainable_vars)
+
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
         loss = cross_entropy_loss
 
         self.loss = loss
 
-        train_step = optimizer.minimize(loss, global_step=global_step)
+        train_step = optimizer.minimize(loss, var_list=trainable_vars, global_step=global_step)
 
         return train_step, iterator
 
@@ -115,7 +121,9 @@ def train():
     dataprovider = TMSEGDatasetProvider()
 
     config = ModelConfig()
-    m = Model(dataprovider, config)
+
+    with tf.variable_scope("Model", reuse=None):
+        m = Model(dataprovider, config)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -125,6 +133,41 @@ def train():
             print(i)
             sess.run(m.train_step)
 
+        m.saver.save(sess, "checkpoints/model.ckpt")
+
+def inference():
+    # TODO: kør på et andet dataset
+    dataprovider = TMSEGDatasetProvider()
+    config = ModelConfig()
+
+    with tf.variable_scope("Model", reuse=True):
+        m = Model(dataprovider, config)
+
+    sequences = m.sequences
+    structures = m.structures
+
+    with tf.Session() as sess:
+        m.saver.restore(sess, "checkpoints/model.ckpt")
+
+        predictions = []
+
+        logits = m.logits
+
+        sess.run(m.iterator.initializer)
+        inputs, targets, out = sess.run([sequences, structures, logits])
+
+
+        batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
+        batch_inputs = np.swapaxes(inputs, 0, 1)
+        batch_targets = np.swapaxes(targets, 0, 1)
+
+        # Todo: Tilføj m.lenghts, så vi kan fjerne 0-ender
+        for prediction in zip(batch_inputs, batch_targets, batch_predictions):
+            predictions.append(prediction)
+
+    return predictions
+
 
 if __name__ == '__main__':
     train()
+    inference()
