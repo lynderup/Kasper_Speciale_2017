@@ -13,7 +13,18 @@
 %Find nogle artikler der laver noget nice med lstm
 
 A lot af recent exiting advances in areas where the data is inherently sequence based 
-have been done with \gls{lstms}. Areas such as language modelling \cite{JozefowiczEtAl, ShazeerEtAl},
+have been done with \glspl{lstm}. Areas such as language modelling \cite{JozefowiczEtAl, ShazeerEtAl},
 speech recognition \cite{XiongEtAl}, machine translation \cite{WuEtAl} and many more, have had the 
-state of the art moved by the use of \gls{lstms}. 
+state of the art moved by the use of \glspl{lstm}. 
 
+% Åbenbart bruger de slet ikke lstm til deres branching eller expert layers. Det virker ikke til de bruger lstm'er på en ny måde
+%In \cite{ShazeerEtAl} a \gls{lstm} is used as a gating network to enable conditional computations of a 
+%much larger network. 
+
+In \cite{JozefowiczEtAl} they explore different model architectures for language modelling 
+on very large datasets, and comes to the conclusion that \glspl{lstm} is the best of the models
+they tried and the bigger layers they used, the better results they got. Most of their work is
+in decreasing the number of computations necessary to train such large \glspl{lstm}. 
+Amongst other they used a approximation of the softmax layer. Due to the large number of 
+classes in langauge modelling the softmax layer becomes very large and have a large influence 
+on the number of computations. 
