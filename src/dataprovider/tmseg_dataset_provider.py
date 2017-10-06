@@ -4,6 +4,7 @@ import tensorflow as tf
 from dataprovider.dataset_provider import DatasetProvider
 from dataprovider.download_dataset import download_dataset
 from dataprovider.fasta_to_tfrecord_converter import fasta_to_tfrecord
+from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGEncoder
 
 
 def _parse_function(example_proto):
@@ -48,7 +49,8 @@ class TMSEGDatasetProvider(DatasetProvider):
         if not os.path.exists(path + tfrecord_path):
             print("Converting dataset")
             os.makedirs(path + tfrecord_path)
-            fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets)
+            encoder = TMSEGEncoder()
+            fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets, encoder)
 
     def get_dataset(self, batch_size):
 
