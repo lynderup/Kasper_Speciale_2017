@@ -1,9 +1,6 @@
 import tensorflow as tf
 import numpy as np
 
-from dataprovider.tmseg_dataset_provider import TMSEGDatasetProvider
-
-
 def sequence_cross_entropy(labels, logits, sequence_lengths):
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
     if sequence_lengths is not None:
@@ -23,7 +20,7 @@ class ModelConfig:
     decay_rate = 0.96
 
     num_units = 10
-    train_steps = 100
+    train_steps = 10
 
 
 class Model:
@@ -32,7 +29,8 @@ class Model:
         self.dataprovider = dataprovider
         self.config = config
 
-        self.train_step, self.iterator = self.build_model()
+        with tf.variable_scope("Model", reuse=None):
+            self.train_step, self.iterator = self.build_model()
 
     def build_model(self):
         config = self.config
@@ -117,53 +115,40 @@ class Model:
 
         return train_step, iterator
 
+    def train(self):
 
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(self.iterator.initializer)
 
-def train():
-    dataprovider = TMSEGDatasetProvider()
+            for i in range(self.config.train_steps):
+                print(i)
+                sess.run(self.train_step)
 
-    config = ModelConfig()
+            self.saver.save(sess, "checkpoints/model.ckpt")
 
-    with tf.variable_scope("Model", reuse=None):
-        m = Model(dataprovider, config)
+    def inference(self):
+        # TODO: kør på et andet dataset
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        sess.run(m.iterator.initializer)
+        lengths = self.lengths
+        sequences = self.sequences
+        structures = self.structures
+        logits = self.logits
 
-        for i in range(config.train_steps):
-            print(i)
-            sess.run(m.train_step)
+        with tf.Session() as sess:
+            self.saver.restore(sess, "checkpoints/model.ckpt")
 
-        m.saver.save(sess, "checkpoints/model.ckpt")
+            sess.run(self.iterator.initializer)
+            len, inputs, targets, out = sess.run([lengths, sequences, structures, logits])
 
-def inference():
-    # TODO: kør på et andet dataset
-    dataprovider = TMSEGDatasetProvider()
-    config = ModelConfig()
+            # Switch sequence dimension with batch dimension so it is batch-major
+            batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
+            batch_inputs = np.swapaxes(inputs, 0, 1)
+            batch_targets = np.swapaxes(targets, 0, 1)
 
-    with tf.variable_scope("Model", reuse=True):
-        m = Model(dataprovider, config)
+            predictions = zip(len, batch_inputs, batch_targets, batch_predictions)
 
-    lengths = m.lengths
-    sequences = m.sequences
-    structures = m.structures
-    logits = m.logits
-
-    with tf.Session() as sess:
-        m.saver.restore(sess, "checkpoints/model.ckpt")
-
-        sess.run(m.iterator.initializer)
-        len, inputs, targets, out = sess.run([lengths, sequences, structures, logits])
-
-        # Switch sequence dimension with batch dimension so it is batch-major
-        batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
-        batch_inputs = np.swapaxes(inputs, 0, 1)
-        batch_targets = np.swapaxes(targets, 0, 1)
-
-        predictions = zip(len, batch_inputs, batch_targets, batch_predictions)
-
-    return predictions
+        return predictions
 
 
 if __name__ == '__main__':
