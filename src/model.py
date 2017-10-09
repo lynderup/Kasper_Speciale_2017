@@ -25,6 +25,7 @@ class ModelConfig:
     num_units = 10
     train_steps = 100
 
+
 class Model:
 
     def __init__(self, dataprovider, config):
@@ -47,6 +48,7 @@ class Model:
         sequences = tf.transpose(sequences, perm=[1, 0])
         structures = tf.transpose(structures, perm=[1, 0])
 
+        self.lengths = lengths
         self.sequences = sequences
         self.structures = structures
 
@@ -143,27 +145,23 @@ def inference():
     with tf.variable_scope("Model", reuse=True):
         m = Model(dataprovider, config)
 
+    lengths = m.lengths
     sequences = m.sequences
     structures = m.structures
+    logits = m.logits
 
     with tf.Session() as sess:
         m.saver.restore(sess, "checkpoints/model.ckpt")
 
-        predictions = []
-
-        logits = m.logits
-
         sess.run(m.iterator.initializer)
-        inputs, targets, out = sess.run([sequences, structures, logits])
+        len, inputs, targets, out = sess.run([lengths, sequences, structures, logits])
 
-
+        # Switch sequence dimension with batch dimension so it is batch-major
         batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
         batch_inputs = np.swapaxes(inputs, 0, 1)
         batch_targets = np.swapaxes(targets, 0, 1)
 
-        # Todo: Tilføj m.lenghts, så vi kan fjerne 0-ender
-        for prediction in zip(batch_inputs, batch_targets, batch_predictions):
-            predictions.append(prediction)
+        predictions = zip(len, batch_inputs, batch_targets, batch_predictions)
 
     return predictions
 
