@@ -1,24 +1,22 @@
+import dataprovider.dataset_provider as dataset_provider
 
 observables = ['A', 'C', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'M', 'L', 'N', 'Q', 'P', 'S', 'R', 'T', 'W', 'V', 'Y']
 
-INSIDE = 1
-HELIX = 2
-OUTSIDE = 3
-UNKNOWN = 0
+structure_encode_dict = {"1": dataset_provider.INSIDE,
+                         "H": dataset_provider.HELIX,
+                         "h": dataset_provider.HELIX,
+                         "2": dataset_provider.OUTSIDE,
+                         "U": dataset_provider.UNKNOWN,
+                         "0": dataset_provider.UNKNOWN,
+                         "L": dataset_provider.UNKNOWN}
 
-structure_encode_dict = {"1": INSIDE,
-                         "H": HELIX,
-                         "h": HELIX,
-                         "2": OUTSIDE,
-                         "U": UNKNOWN,
-                         "0": UNKNOWN,
-                         "L": UNKNOWN}
+structure_decode_dict = {dataset_provider.INSIDE: "i",
+                         dataset_provider.HELIX: "h",
+                         dataset_provider.OUTSIDE: "o",
+                         dataset_provider.UNKNOWN: "u"}
 
-structure_decode_dict ={INSIDE: "i",
-                        HELIX: "h",
-                        OUTSIDE: "o",
-                        UNKNOWN: "u"}
-
+step1_target_decode_dict = {dataset_provider.MEMBRANE: "M",
+                            dataset_provider.NOTMEMBRANE: "n"}
 
 class TMSEGEncoder:
 
@@ -35,5 +33,6 @@ class TMSEGDecoder:
         return "".join([observables[x] for x in sequence])
 
     def decode_structure(self, structure):
-        return "".join([structure_decode_dict[z] for z in structure])
+        # return "".join([structure_decode_dict[z] for z in structure])
+        return "".join([step1_target_decode_dict[z] for z in structure])
 

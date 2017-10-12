@@ -13,7 +13,7 @@ def sequence_cross_entropy(labels, logits, sequence_lengths):
 class ModelConfig:
     batch_size = 10
     num_input_classes = 20
-    num_output_classes = 4
+    num_output_classes = 2
 
     starting_learning_rate = 0.01
     decay_steps = 10
@@ -119,6 +119,7 @@ class Model:
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+            sess.run(self.dataprovider.get_table_init_op())
             sess.run(self.iterator.initializer)
 
             for i in range(self.config.train_steps):
@@ -138,6 +139,7 @@ class Model:
         with tf.Session() as sess:
             self.saver.restore(sess, "checkpoints/model.ckpt")
 
+            sess.run(self.dataprovider.get_table_init_op())
             sess.run(self.iterator.initializer)
             len, inputs, targets, out = sess.run([lengths, sequences, structures, logits])
 

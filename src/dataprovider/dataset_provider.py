@@ -1,21 +1,34 @@
-import numpy as np
+import tensorflow as tf
 
-from collections import namedtuple
+# Structure constants
+INSIDE = 1
+HELIX = 2
+OUTSIDE = 3
+UNKNOWN = 0
 
-observables = ['A', 'C', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'M', 'L', 'N', 'Q', 'P', 'S', 'R', 'T', 'W', 'V', 'Y']
+# Step 1 target constants
+MEMBRANE = 0
+NOTMEMBRANE = 1
+
+
+structure_to_step1_target_dict = {INSIDE: NOTMEMBRANE,
+                                  HELIX: MEMBRANE,
+                                  OUTSIDE: NOTMEMBRANE,
+                                  UNKNOWN: NOTMEMBRANE}
+
+keys = tf.convert_to_tensor((INSIDE, HELIX, OUTSIDE, UNKNOWN), dtype=tf.int64)
+values = tf.convert_to_tensor((NOTMEMBRANE, MEMBRANE, NOTMEMBRANE, NOTMEMBRANE), dtype=tf.int64)
+table = tf.contrib.lookup.HashTable(tf.contrib.lookup.KeyValueTensorInitializer(keys, values), -1)
+
+
+def structure_to_step_targets(lengths, sequence, structure):
+    # step1_target = tf.map_fn(lambda s: structure_to_step1_target_dict[s], structure)
+    step1_target = table.lookup(structure)
+
+    return lengths, sequence, step1_target
+
 
 class DatasetProvider:
 
-    INSIDE = 1
-    HELIX = 2
-    OUTSIDE = 3
-
-    Protein = namedtuple("Protein", ["name", "sequence", "structure"])
-
-    @classmethod
-    def encode_sequence(cls, sequence):
-        return np.asarray([observables.index(x) for x in sequence])
-
-    @classmethod
-    def decode_sequence(cls, sequence):
-        return "".join([observables[x] for x in sequence])
+    def get_table_init_op(self):
+        return table.init

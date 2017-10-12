@@ -1,3 +1,6 @@
+from decoder.write_to_fasta import write_to_fasta
+
+
 def cut_to_lengths(length, inputs, targets, predictions):
     return inputs[0:length], targets[0:length], predictions[0:length]
 

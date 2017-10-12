@@ -1,7 +1,8 @@
 import os
 import tensorflow as tf
 
-from dataprovider.dataset_provider import DatasetProvider
+import dataprovider.dataset_provider as dataset_provider
+
 from dataprovider.download_dataset import download_dataset
 from dataprovider.fasta_to_tfrecord_converter import fasta_to_tfrecord
 from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGEncoder
@@ -20,10 +21,15 @@ def _parse_function(example_proto):
                                                                        context_features=context_features,
                                                                        sequence_features=sequence_features)
     lengths = tf.cast(context_parsed["length"], tf.int32)
-    return lengths, sequence_parsed["sequence"], sequence_parsed["structure"]
+    # sequence = tf.cast(sequence_parsed["sequence"], tf.int32)
+    sequence = sequence_parsed["sequence"]
+    # structure = tf.cast(sequence_parsed["structure"], tf.int32)
+    structure = sequence_parsed["structure"]
+
+    return lengths, sequence, structure
 
 
-class TMSEGDatasetProvider(DatasetProvider):
+class TMSEGDatasetProvider(dataset_provider.DatasetProvider):
 
     @staticmethod
     def download_and_convert_if_not_existing():
@@ -62,6 +68,7 @@ class TMSEGDatasetProvider(DatasetProvider):
 
         dataset = tf.contrib.data.TFRecordDataset(paths)
         dataset = dataset.map(_parse_function)
+        dataset = dataset.map(dataset_provider.structure_to_step_targets)
         dataset = dataset.repeat(None)  # Infinite iterations
         dataset = dataset.shuffle(buffer_size=1000)
         dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None]))
