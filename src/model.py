@@ -30,17 +30,18 @@ class Model:
         self.config = config
 
         with tf.variable_scope("Model", reuse=None):
-            self.train_step, self.iterator = self.build_model()
+            self.train_step = self.build_model()
 
     def build_model(self):
         config = self.config
 
-        dataset = self.dataprovider.get_dataset(config.batch_size)
+        # dataset = self.dataprovider.get_dataset(config.batch_size)
+        # iterator = dataset.make_initializable_iterator()
 
         global_step = tf.Variable(0, trainable=False)
 
-        iterator = dataset.make_initializable_iterator()
-        lengths, sequences, structures = iterator.get_next()
+        self.handle, self.iterator = self.dataprovider.get_iterator()
+        lengths, sequences, structures = self.iterator.get_next()
 
         #  TODO: Tensors in wrong shapes. Need fixing!!!
         sequences = tf.transpose(sequences, perm=[1, 0])
@@ -113,18 +114,25 @@ class Model:
 
         train_step = optimizer.minimize(loss, var_list=trainable_vars, global_step=global_step)
 
-        return train_step, iterator
+        return train_step
 
     def train(self):
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(self.dataprovider.get_table_init_op())
-            sess.run(self.iterator.initializer)
+            # sess.run(self.iterator.initializer)
+
+            handle = self.handle
+            train_handle, _ = sess.run(self.dataprovider.get_train_iterator_handle()) # get_handle returns (handle, init_op)
+            train_feed = {handle: train_handle}
+
+            validation_handle, _ = sess.run(self.dataprovider.get_validation_iterator_handle()) # get_handle returns (handle, init_op)
+            validation_feed = {handle: validation_handle}
 
             for i in range(self.config.train_steps):
                 print(i)
-                sess.run(self.train_step)
+                sess.run(self.train_step, feed_dict=train_feed)
 
             self.saver.save(sess, "checkpoints/model.ckpt")
 
@@ -140,8 +148,13 @@ class Model:
             self.saver.restore(sess, "checkpoints/model.ckpt")
 
             sess.run(self.dataprovider.get_table_init_op())
-            sess.run(self.iterator.initializer)
-            len, inputs, targets, out = sess.run([lengths, sequences, structures, logits])
+            # sess.run(self.iterator.initializer)
+
+            handle = self.handle
+            test_handle, _ = sess.run(self.dataprovider.get_test_iterator_handle()) # get_handle returns (handle, init_op)
+            test_feed = {handle: test_handle}
+
+            len, inputs, targets, out = sess.run([lengths, sequences, structures, logits], feed_dict=test_feed)
 
             # Switch sequence dimension with batch dimension so it is batch-major
             batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
