@@ -7,7 +7,7 @@ from decoder.decode_and_print_step1 import decode_and_print_step1
 if __name__ == '__main__':
     config = model.ModelConfig()
     dataprovider = TMSEGDatasetProvider(batch_size=config.batch_size)
-    m = model.Model(dataprovider, config)
+    m = model.Model(dataprovider, config, "test/")
 
     m.train()
     predictions = m.inference()

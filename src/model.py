@@ -20,12 +20,13 @@ class ModelConfig:
     decay_rate = 0.96
 
     num_units = 10
-    train_steps = 10
+    train_steps = 1000
 
 
 class Model:
 
-    def __init__(self, dataprovider, config):
+    def __init__(self, dataprovider, config, logdir):
+        self.logdir = logdir
         self.dataprovider = dataprovider
         self.config = config
 
@@ -102,6 +103,8 @@ class Model:
                                                    config.decay_rate,
                                                    staircase=True)
 
+        self.learning_rate = learning_rate
+
         trainable_vars = tf.trainable_variables()
 
         self.saver = tf.train.Saver(trainable_vars)
@@ -117,6 +120,8 @@ class Model:
         return train_step
 
     def train(self):
+        summary_writer = tf.summary.FileWriter(self.logdir)
+        summary_writer.add_graph(tf.get_default_graph())
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -130,14 +135,27 @@ class Model:
             validation_handle, _ = sess.run(self.dataprovider.get_validation_iterator_handle()) # get_handle returns (handle, init_op)
             validation_feed = {handle: validation_handle}
 
+            sum_loss = tf.summary.scalar("loss", self.loss)
+            sum_val_loss = tf.summary.scalar("validation loss", self.loss)
+            sum_learn_rate = tf.summary.scalar("learning rate", self.learning_rate)
+
+            merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
+
             for i in range(self.config.train_steps):
                 print(i)
-                sess.run(self.train_step, feed_dict=train_feed)
 
-            self.saver.save(sess, "checkpoints/model.ckpt")
+                fetches = [merged_sum, self.train_step]
+                summary, _ = sess.run(fetches=fetches, feed_dict=train_feed)
+
+                if i % 10 == 0:
+                    val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
+                    summary_writer.add_summary(val_loss, i)
+                    summary_writer.add_summary(summary, i)
+
+            self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
+
 
     def inference(self):
-        # TODO: kør på et andet dataset
 
         lengths = self.lengths
         sequences = self.sequences
@@ -145,7 +163,7 @@ class Model:
         logits = self.logits
 
         with tf.Session() as sess:
-            self.saver.restore(sess, "checkpoints/model.ckpt")
+            self.saver.restore(sess, self.logdir + "checkpoints/model.ckpt")
 
             sess.run(self.dataprovider.get_table_init_op())
             # sess.run(self.iterator.initializer)
@@ -164,8 +182,3 @@ class Model:
             predictions = zip(len, batch_inputs, batch_targets, batch_predictions)
 
         return predictions
-
-
-if __name__ == '__main__':
-    train()
-    inference()

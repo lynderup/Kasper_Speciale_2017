@@ -57,7 +57,7 @@ class DatasetProvider:
         trainset, validationset, testset = filenames
 
         self.training_dataset = self.get_dataset(batch_size, trainset, repeat_shuffle=True)
-        self.validation_dataset = self.get_dataset(batch_size, validationset)
+        self.validation_dataset = self.get_dataset(batch_size, validationset, repeat_shuffle=True)
         self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
