@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 def sequence_cross_entropy(labels, logits, sequence_lengths):
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
     if sequence_lengths is not None:
@@ -20,7 +21,7 @@ class ModelConfig:
     decay_rate = 0.96
 
     num_units = 10
-    train_steps = 1000
+    train_steps = 100
 
 
 class Model:
@@ -30,27 +31,38 @@ class Model:
         self.dataprovider = dataprovider
         self.config = config
 
-        with tf.variable_scope("Model", reuse=None):
-            self.train_step = self.build_model()
-
-    def build_model(self):
-        config = self.config
-
-        # dataset = self.dataprovider.get_dataset(config.batch_size)
-        # iterator = dataset.make_initializable_iterator()
-
         global_step = tf.Variable(0, trainable=False)
 
+        #Data input
+        with tf.variable_scope("Input", reuse=None):
+            lengths, sequences, structures_step1 = self.build_data_input()
+            self.lengths = lengths
+            self.sequences = sequences
+            self.structures_step1 = structures_step1
+
+
+        # Build model graph step1
+        with tf.variable_scope("Model", reuse=None):
+            logits = self.build_model_step1(sequences, lengths)
+            self.logits_step1 = logits
+
+        # Build training graph step1
+        with tf.variable_scope("Training", reuse=None):
+            train_step = self.build_training_graph_step1(logits, structures_step1, lengths, global_step)
+            self.train_step = train_step
+
+    def build_data_input(self):
         self.handle, self.iterator = self.dataprovider.get_iterator()
-        lengths, sequences, structures = self.iterator.get_next()
+        lengths, sequences, structures_step1 = self.iterator.get_next()
 
         #  TODO: Tensors in wrong shapes. Need fixing!!!
         sequences = tf.transpose(sequences, perm=[1, 0])
-        structures = tf.transpose(structures, perm=[1, 0])
+        structures_step1 = tf.transpose(structures_step1, perm=[1, 0])
 
-        self.lengths = lengths
-        self.sequences = sequences
-        self.structures = structures
+        return lengths, sequences, structures_step1
+
+    def build_model_step1(self, sequences, lengths):
+        config = self.config
 
         embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units], dtype=tf.float32)
 
@@ -91,9 +103,15 @@ class Model:
 
         logits = tf.reshape(_logits, [-1, config.batch_size, config.num_output_classes])
 
-        self.logits = logits
+        trainable_vars = tf.trainable_variables()
+        self.saver = tf.train.Saver(trainable_vars)
 
-        cross_entropy_loss = tf.reduce_mean(sequence_cross_entropy(labels=structures,
+        return logits
+
+    def build_training_graph_step1(self, logits, targets, lengths, global_step):
+        config = self.config
+
+        cross_entropy_loss = tf.reduce_mean(sequence_cross_entropy(labels=targets,
                                                                    logits=logits,
                                                                    sequence_lengths=lengths))
 
@@ -102,21 +120,15 @@ class Model:
                                                    config.decay_steps,
                                                    config.decay_rate,
                                                    staircase=True)
-
         self.learning_rate = learning_rate
-
-        trainable_vars = tf.trainable_variables()
-
-        self.saver = tf.train.Saver(trainable_vars)
 
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
         loss = cross_entropy_loss
-
         self.loss = loss
 
+        trainable_vars = tf.trainable_variables()
         train_step = optimizer.minimize(loss, var_list=trainable_vars, global_step=global_step)
-
         return train_step
 
     def train(self):
@@ -154,13 +166,12 @@ class Model:
 
             self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
 
-
     def inference(self):
 
         lengths = self.lengths
         sequences = self.sequences
-        structures = self.structures
-        logits = self.logits
+        structures = self.structures_step1
+        logits = self.logits_step1
 
         with tf.Session() as sess:
             self.saver.restore(sess, self.logdir + "checkpoints/model.ckpt")
@@ -172,13 +183,13 @@ class Model:
             test_handle, _ = sess.run(self.dataprovider.get_test_iterator_handle()) # get_handle returns (handle, init_op)
             test_feed = {handle: test_handle}
 
-            len, inputs, targets, out = sess.run([lengths, sequences, structures, logits], feed_dict=test_feed)
+            _lengths, inputs, targets, out = sess.run([lengths, sequences, structures, logits], feed_dict=test_feed)
 
             # Switch sequence dimension with batch dimension so it is batch-major
             batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
             batch_inputs = np.swapaxes(inputs, 0, 1)
             batch_targets = np.swapaxes(targets, 0, 1)
 
-            predictions = zip(len, batch_inputs, batch_targets, batch_predictions)
+            predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions)
 
         return predictions
