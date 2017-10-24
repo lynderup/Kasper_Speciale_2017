@@ -1,5 +1,9 @@
+import math
+
 import tensorflow as tf
 import numpy as np
+
+import dataprovider.dataset_provider as dataset_provider
 
 
 def sequence_cross_entropy(labels, logits, sequence_lengths):
@@ -108,6 +112,45 @@ class Model:
 
         return logits
 
+    def build_model_step2(self, logits):
+        pass
+
+    def numpy_step2(self, logits):
+        batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
+
+        new_predictions = []
+
+        for prediction in batch_predictions:
+
+            in_membrane = False
+            membranes = []
+            membrane_start_index = -1
+
+            for i, z in enumerate(prediction):
+                if z == dataset_provider.MEMBRANE:
+                    if not in_membrane:
+                        in_membrane = True
+                        membrane_start_index = i
+                else:
+                    if in_membrane:
+                        in_membrane = False
+                        membranes.append((membrane_start_index, i))
+
+            for start, end in membranes:
+                length = end - start
+
+                if length <= 5:
+                    prediction[start:end] = [dataset_provider.NOTMEMBRANE] * length
+
+                if length >= 35:
+                    new_membrane = [dataset_provider.MEMBRANE] * length
+                    new_membrane[math.floor(length/2)] = dataset_provider.NOTMEMBRANE
+                    prediction[start:end] = new_membrane
+
+            new_predictions.append(prediction)
+
+        return np.asarray(new_predictions)
+
     def build_training_graph_step1(self, logits, targets, lengths, global_step):
         config = self.config
 
@@ -190,6 +233,8 @@ class Model:
             batch_inputs = np.swapaxes(inputs, 0, 1)
             batch_targets = np.swapaxes(targets, 0, 1)
 
-            predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions)
+            batch_corrected_predictions = self.numpy_step2(out)
+
+            predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
 
         return predictions
