@@ -1,4 +1,5 @@
 import math
+import functools
 
 import tensorflow as tf
 import numpy as np
@@ -115,10 +116,9 @@ class Model:
     def build_model_step2(self, logits):
         pass
 
-    def numpy_step2(self, logits):
+    def find_membranes(self, logits):
         batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
-
-        new_predictions = []
+        batch_membranes = []
 
         for prediction in batch_predictions:
 
@@ -136,6 +136,18 @@ class Model:
                         in_membrane = False
                         membranes.append((membrane_start_index, i))
 
+            batch_membranes.append(membranes)
+
+        return np.asarray(batch_membranes)
+
+    def numpy_step2(self, logits):
+        batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
+        batch_membranes = self.find_membranes(logits)
+
+        new_predictions = []
+
+        for i, membranes in enumerate(batch_membranes):
+            prediction = batch_predictions[i]
             for start, end in membranes:
                 length = end - start
 
@@ -150,6 +162,27 @@ class Model:
             new_predictions.append(prediction)
 
         return np.asarray(new_predictions)
+
+    def build_model_step3(self, embedding, logits, targets):
+        membrane_endpoints = tf.placeholder(tf.int32, shape=[None])
+        batch_index = tf.placeholder(tf.int32, shape=[])
+
+        self.membrane_endpoints = membrane_endpoints
+        self.batch_index = batch_index
+
+        new_input = tf.concat([embedding, logits], axis=2)
+
+        def new_input_slice_map(end_point):
+            return tf.squeeze(tf.slice(new_input, [end_point - 5, batch_index, 0], [11, 1, -1]), axis=1)
+
+        def target_slice_map(end_point):
+            return tf.squeeze(tf.slice(targets, [end_point - 5, batch_index], [11, 1]), axis=1)
+
+        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints)
+        target_slices = tf.map_fn(target_slice_map, membrane_endpoints)
+
+        self.input_slices = input_slices
+        self.target_slices = target_slices
 
     def build_training_graph_step1(self, logits, targets, lengths, global_step):
         config = self.config
@@ -215,6 +248,10 @@ class Model:
         sequences = self.sequences
         structures = self.structures_step1
         logits = self.logits_step1
+
+        embeddings = self.inputs
+
+        self.build_model_step3(embedding=embeddings, logits=logits, targets=structures)
 
         with tf.Session() as sess:
             self.saver.restore(sess, self.logdir + "checkpoints/model.ckpt")
