@@ -136,7 +136,7 @@ class Model:
                         in_membrane = False
                         membranes.append((membrane_start_index, i))
 
-            batch_membranes.append(membranes)
+            batch_membranes.append(np.asarray(membranes))
 
         return np.asarray(batch_membranes)
 
@@ -173,13 +173,17 @@ class Model:
         new_input = tf.concat([embedding, logits], axis=2)
 
         def new_input_slice_map(end_point):
-            return tf.squeeze(tf.slice(new_input, [end_point - 5, batch_index, 0], [11, 1, -1]), axis=1)
+            return tf.squeeze(tf.slice(new_input,
+                                       [tf.minimum(end_point - 5, tf.shape(new_input)[0] - 11), batch_index, 0],
+                                       [11, 1, -1]), axis=1)
 
         def target_slice_map(end_point):
-            return tf.squeeze(tf.slice(targets, [end_point - 5, batch_index], [11, 1]), axis=1)
+            return tf.squeeze(tf.slice(targets,
+                                       [tf.minimum(end_point - 5, tf.shape(targets)[0] - 11), batch_index],
+                                       [11, 1]), axis=1)
 
-        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints)
-        target_slices = tf.map_fn(target_slice_map, membrane_endpoints)
+        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.int32)
+        target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.int64)
 
         self.input_slices = input_slices
         self.target_slices = target_slices
@@ -251,7 +255,10 @@ class Model:
 
         embeddings = self.inputs
 
-        self.build_model_step3(embedding=embeddings, logits=logits, targets=structures)
+        embeddings_placeholder = tf.placeholder(embeddings.dtype, shape=embeddings.get_shape())
+        logits_placeholder = tf.placeholder(logits.dtype, shape=logits.get_shape())
+        targets_placeholder = tf.placeholder(structures.dtype, shape=structures.get_shape())
+        self.build_model_step3(embedding=embeddings_placeholder, logits=logits_placeholder, targets=targets_placeholder)
 
         with tf.Session() as sess:
             self.saver.restore(sess, self.logdir + "checkpoints/model.ckpt")
@@ -263,12 +270,28 @@ class Model:
             test_handle, _ = sess.run(self.dataprovider.get_test_iterator_handle()) # get_handle returns (handle, init_op)
             test_feed = {handle: test_handle}
 
-            _lengths, inputs, targets, out = sess.run([lengths, sequences, structures, logits], feed_dict=test_feed)
+            _lengths, inputs, targets, emb, out = sess.run([lengths, sequences, structures, embeddings, logits], feed_dict=test_feed)
 
             # Switch sequence dimension with batch dimension so it is batch-major
             batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
             batch_inputs = np.swapaxes(inputs, 0, 1)
             batch_targets = np.swapaxes(targets, 0, 1)
+
+            batch_membranes = self.find_membranes(out)
+            print(batch_membranes[0])
+            print(len(batch_membranes[0]))
+            print(batch_membranes[0].reshape(-1))
+            print(len(batch_membranes[0].reshape(-1)))
+
+            step3_feed={self.membrane_endpoints:batch_membranes[0].reshape(-1),
+                        self.batch_index:0,
+                        embeddings_placeholder: emb,
+                        logits_placeholder: out,
+                        targets_placeholder: targets}
+
+            slices = sess.run(self.target_slices, feed_dict=step3_feed)
+            print(slices)
+            print(len(slices))
 
             batch_corrected_predictions = self.numpy_step2(out)
 
