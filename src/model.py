@@ -30,7 +30,6 @@ class ModelConfig:
 
 
 class Model:
-
     def __init__(self, dataprovider, config, logdir):
         self.logdir = logdir
         self.dataprovider = dataprovider
@@ -38,23 +37,65 @@ class Model:
 
         global_step = tf.Variable(0, trainable=False)
 
-        #Data input
+        # Data input
         with tf.variable_scope("Input", reuse=None):
             lengths, sequences, structures_step1 = self.build_data_input()
             self.lengths = lengths
             self.sequences = sequences
             self.structures_step1 = structures_step1
 
-
-        # Build model graph step1
+        # Build model graph
         with tf.variable_scope("Model", reuse=None):
-            logits = self.build_model_step1(sequences, lengths)
-            self.logits_step1 = logits
+            with tf.variable_scope("Step1", reuse=None):
+                logits = self.build_model_step1(sequences, lengths)
+                self.logits_step1 = logits
+
+            with tf.variable_scope("Step3", reuse=None):
+                self.embeddings_placeholder = tf.placeholder(self.embedded_input.dtype,
+                                                             shape=self.embedded_input.get_shape(),
+                                                             name="embeddings_placeholder")
+                self.logits_placeholder = tf.placeholder(logits.dtype,
+                                                         shape=logits.get_shape(),
+                                                         name="logits_placeholder")
+                self.targets_placeholder = tf.placeholder(tf.float32,#structures_step1.dtype,
+                                                          shape=self.structures_step1.get_shape(),
+                                                          name="targets_placeholder")
+
+                self.build_model_step3(embedding=self.embeddings_placeholder,
+                                       logits=self.logits_placeholder,
+                                       targets=self.targets_placeholder)
+
+            trainable_vars = tf.trainable_variables()
+            self.saver = tf.train.Saver(trainable_vars)
 
         # Build training graph step1
         with tf.variable_scope("Training", reuse=None):
-            train_step = self.build_training_graph_step1(logits, structures_step1, lengths, global_step)
-            self.train_step = train_step
+            with tf.variable_scope("Step1", reuse=None):
+                var_list_step1 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Model/Step1')
+
+                cross_entropy_loss_step1 = tf.reduce_mean(sequence_cross_entropy(labels=structures_step1,
+                                                                                 logits=logits,
+                                                                                 sequence_lengths=lengths))
+
+                learning_rate, loss_step1, train_step_step1 = self.build_training_graph(cross_entropy_loss_step1,
+                                                                                        var_list=var_list_step1,
+                                                                                        global_step=global_step)
+                self.learning_rate = learning_rate
+                self.loss_step1 = loss_step1
+                self.train_step_step1 = train_step_step1
+
+            with tf.variable_scope("Step3", reuse=None):
+                var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Model/Step3')
+                cross_entropy_loss_step3 = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.target_slices,
+                                                                                   logits=self.sigmoid_output)
+                cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
+
+                learning_rate, loss_step3, train_step_step3 = self.build_training_graph(cross_entropy_loss_step3,
+                                                                                        var_list=var_list_step3,
+                                                                                        global_step=global_step,
+                                                                                        should_increment=False)
+                self.loss_step3 = loss_step3
+                self.train_step_step3 = train_step_step3
 
     def build_data_input(self):
         self.handle, self.iterator = self.dataprovider.get_iterator()
@@ -71,8 +112,8 @@ class Model:
 
         embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units], dtype=tf.float32)
 
-        inputs = tf.nn.embedding_lookup(embedding, sequences)
-        self.inputs = inputs
+        embedded_input = tf.nn.embedding_lookup(embedding, sequences)
+        self.embedded_input = embedded_input
 
         fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=config.num_units,
                                                     forget_bias=0,
@@ -83,13 +124,13 @@ class Model:
         initial_state = (tf.zeros([config.batch_size, config.num_units], tf.float32),
                          tf.zeros([config.batch_size, config.num_units], tf.float32))
 
-        fw_output, fw_state = fw_lstm(inputs,
+        fw_output, fw_state = fw_lstm(embedded_input,
                                       initial_state=initial_state,
                                       dtype=None,
                                       sequence_length=lengths,
                                       scope="fw_rnn")
 
-        bw_output, bw_state = bw_lstm(inputs,
+        bw_output, bw_state = bw_lstm(embedded_input,
                                       initial_state=initial_state,
                                       dtype=None,
                                       sequence_length=lengths,
@@ -107,9 +148,6 @@ class Model:
         _logits = tf.matmul(_output, softmax_w) + softmax_b
 
         logits = tf.reshape(_logits, [-1, config.batch_size, config.num_output_classes])
-
-        trainable_vars = tf.trainable_variables()
-        self.saver = tf.train.Saver(trainable_vars)
 
         return logits
 
@@ -140,6 +178,24 @@ class Model:
 
         return np.asarray(batch_membranes)
 
+    def filter_membranes(self, batch_membranes):
+
+        new_batch_membranes = []
+        for membranes in batch_membranes:
+
+            new_membranes = []
+            for start, end in membranes:
+                length = end - start
+
+                if length > 5:
+                    if length >= 35:
+                        new_membranes.append((start, math.floor(length / 2)))
+                        new_membranes.append((math.ceil(length / 2), end))
+                    else:
+                        new_membranes.append((start, end))
+            new_batch_membranes.append(np.asarray(new_membranes))
+        return np.asarray(new_batch_membranes)
+
     def numpy_step2(self, logits):
         batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
         batch_membranes = self.find_membranes(logits)
@@ -156,7 +212,7 @@ class Model:
 
                 if length >= 35:
                     new_membrane = [dataset_provider.MEMBRANE] * length
-                    new_membrane[math.floor(length/2)] = dataset_provider.NOTMEMBRANE
+                    new_membrane[math.floor(length / 2)] = dataset_provider.NOTMEMBRANE
                     prediction[start:end] = new_membrane
 
             new_predictions.append(prediction)
@@ -164,52 +220,71 @@ class Model:
         return np.asarray(new_predictions)
 
     def build_model_step3(self, embedding, logits, targets):
+        config = self.config
         membrane_endpoints = tf.placeholder(tf.int32, shape=[None])
         batch_index = tf.placeholder(tf.int32, shape=[])
 
         self.membrane_endpoints = membrane_endpoints
         self.batch_index = batch_index
 
-        new_input = tf.concat([embedding, logits], axis=2)
+        _input = tf.sigmoid(logits)
+
+        new_input = tf.concat([embedding, _input], axis=2)
 
         def new_input_slice_map(end_point):
             return tf.squeeze(tf.slice(new_input,
-                                       [tf.minimum(end_point - 5, tf.shape(new_input)[0] - 11), batch_index, 0],
+                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(new_input)[0] - 11)),
+                                        batch_index, 0],
                                        [11, 1, -1]), axis=1)
 
         def target_slice_map(end_point):
             return tf.squeeze(tf.slice(targets,
-                                       [tf.minimum(end_point - 5, tf.shape(targets)[0] - 11), batch_index],
+                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[0] - 11)),
+                                        batch_index],
                                        [11, 1]), axis=1)
 
-        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.int32)
-        target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.int64)
+        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.float32)
+        target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.float32)
 
         self.input_slices = input_slices
         self.target_slices = target_slices
 
-    def build_training_graph_step1(self, logits, targets, lengths, global_step):
-        config = self.config
+        window_size = 11
+        input_size = 12
+        num_hidden_units = 100
 
-        cross_entropy_loss = tf.reduce_mean(sequence_cross_entropy(labels=targets,
-                                                                   logits=logits,
-                                                                   sequence_lengths=lengths))
+        hidden_w = tf.get_variable("hidden_w", [window_size * input_size, num_hidden_units], dtype=tf.float32)
+        hidden_b = tf.get_variable("hidden_b", [num_hidden_units], dtype=tf.float32)
+
+        _input_slices = tf.reshape(input_slices, shape=(-1, window_size * input_size))
+        hidden_output = tf.sigmoid(tf.matmul(_input_slices, hidden_w) + hidden_b)
+
+        sigmoid_w = tf.get_variable("sigmoid_w", [num_hidden_units, window_size], dtype=tf.float32)
+        sigmoid_b = tf.get_variable("sigmoid_b", [window_size], dtype=tf.float32)
+
+        sigmoid_output = tf.matmul(hidden_output, sigmoid_w) + sigmoid_b
+        # softmax_output = tf.reshape(_softmax_output, shape=(-1, window_size, config.num_output_classes))
+
+        self.sigmoid_output = sigmoid_output
+
+    def build_training_graph(self, cross_entropy_loss, var_list, global_step, should_increment=False):
+        config = self.config
 
         learning_rate = tf.train.exponential_decay(config.starting_learning_rate,
                                                    global_step,
                                                    config.decay_steps,
                                                    config.decay_rate,
                                                    staircase=True)
-        self.learning_rate = learning_rate
 
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
         loss = cross_entropy_loss
-        self.loss = loss
 
-        trainable_vars = tf.trainable_variables()
-        train_step = optimizer.minimize(loss, var_list=trainable_vars, global_step=global_step)
-        return train_step
+        if not should_increment:
+            global_step = None
+
+        train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
+        return learning_rate, loss, train_step
 
     def train(self):
         summary_writer = tf.summary.FileWriter(self.logdir)
@@ -221,14 +296,16 @@ class Model:
             # sess.run(self.iterator.initializer)
 
             handle = self.handle
-            train_handle, _ = sess.run(self.dataprovider.get_train_iterator_handle()) # get_handle returns (handle, init_op)
+            train_handle, _ = sess.run(
+                self.dataprovider.get_train_iterator_handle())  # get_handle returns (handle, init_op)
             train_feed = {handle: train_handle}
 
-            validation_handle, _ = sess.run(self.dataprovider.get_validation_iterator_handle()) # get_handle returns (handle, init_op)
+            validation_handle, _ = sess.run(
+                self.dataprovider.get_validation_iterator_handle())  # get_handle returns (handle, init_op)
             validation_feed = {handle: validation_handle}
 
-            sum_loss = tf.summary.scalar("loss", self.loss)
-            sum_val_loss = tf.summary.scalar("validation loss", self.loss)
+            sum_loss = tf.summary.scalar("loss", self.loss_step1)
+            sum_val_loss = tf.summary.scalar("validation loss", self.loss_step1)
             sum_learn_rate = tf.summary.scalar("learning rate", self.learning_rate)
 
             merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
@@ -236,8 +313,25 @@ class Model:
             for i in range(self.config.train_steps):
                 print(i)
 
-                fetches = [merged_sum, self.train_step]
-                summary, _ = sess.run(fetches=fetches, feed_dict=train_feed)
+                fetches = [merged_sum,
+                           self.train_step_step1,
+                           self.embedded_input,
+                           self.structures_step1,
+                           self.logits_step1]
+
+                summary, _, emb, targets, out_step1 = sess.run(fetches=fetches, feed_dict=train_feed)
+
+                batch_membranes = self.find_membranes(out_step1)
+                filtered_batch_membranes = self.filter_membranes(batch_membranes)
+
+                for batch_index, membranes in enumerate(filtered_batch_membranes):
+                    step3_feed = {self.membrane_endpoints: membranes.reshape(-1),  # Is list of pairs
+                                  self.batch_index: batch_index,
+                                  self.embeddings_placeholder: emb,
+                                  self.logits_placeholder: out_step1,
+                                  self.targets_placeholder: targets}
+
+                    sess.run(self.train_step_step3, feed_dict=step3_feed)
 
                 if i % 10 == 0:
                     val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
@@ -253,12 +347,7 @@ class Model:
         structures = self.structures_step1
         logits = self.logits_step1
 
-        embeddings = self.inputs
-
-        embeddings_placeholder = tf.placeholder(embeddings.dtype, shape=embeddings.get_shape())
-        logits_placeholder = tf.placeholder(logits.dtype, shape=logits.get_shape())
-        targets_placeholder = tf.placeholder(structures.dtype, shape=structures.get_shape())
-        self.build_model_step3(embedding=embeddings_placeholder, logits=logits_placeholder, targets=targets_placeholder)
+        embeddings = self.embedded_input
 
         with tf.Session() as sess:
             self.saver.restore(sess, self.logdir + "checkpoints/model.ckpt")
@@ -267,10 +356,12 @@ class Model:
             # sess.run(self.iterator.initializer)
 
             handle = self.handle
-            test_handle, _ = sess.run(self.dataprovider.get_test_iterator_handle()) # get_handle returns (handle, init_op)
+            test_handle, _ = sess.run(
+                self.dataprovider.get_test_iterator_handle())  # get_handle returns (handle, init_op)
             test_feed = {handle: test_handle}
 
-            _lengths, inputs, targets, emb, out = sess.run([lengths, sequences, structures, embeddings, logits], feed_dict=test_feed)
+            _lengths, inputs, targets, emb, out = sess.run([lengths, sequences, structures, embeddings, logits],
+                                                           feed_dict=test_feed)
 
             # Switch sequence dimension with batch dimension so it is batch-major
             batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
@@ -278,20 +369,30 @@ class Model:
             batch_targets = np.swapaxes(targets, 0, 1)
 
             batch_membranes = self.find_membranes(out)
-            print(batch_membranes[0])
-            print(len(batch_membranes[0]))
-            print(batch_membranes[0].reshape(-1))
-            print(len(batch_membranes[0].reshape(-1)))
+            filtered_batch_membranes = self.filter_membranes(batch_membranes)
+            filtered_batch_membranes_endpoints = np.asarray(
+                [membranes.reshape(-1) for membranes in filtered_batch_membranes])
 
-            step3_feed={self.membrane_endpoints:batch_membranes[0].reshape(-1),
-                        self.batch_index:0,
-                        embeddings_placeholder: emb,
-                        logits_placeholder: out,
-                        targets_placeholder: targets}
+            step3_feed = {self.membrane_endpoints: filtered_batch_membranes_endpoints[0],
+                          self.batch_index: 0,
+                          self.embeddings_placeholder: emb,
+                          self.logits_placeholder: out,
+                          self.targets_placeholder: targets}
 
-            slices = sess.run(self.target_slices, feed_dict=step3_feed)
-            print(slices)
-            print(len(slices))
+            step3_logits, target_slices = sess.run([self.sigmoid_output, self.target_slices], feed_dict=step3_feed)
+            # endpoint_corrections = np.argmax(step3_logits, axis=2)
+            endpoint_corrections = step3_logits
+
+            for i, (corrected, window) in enumerate(zip(endpoint_corrections, target_slices)):
+                end_point = filtered_batch_membranes_endpoints[0][i]
+                begin = np.maximum(0, np.minimum(end_point - 5, len(out) - 11))
+                logit_slice = out[begin:begin + 11, 0, :]
+                print(logit_slice.shape)
+
+                print(window)
+                print(np.argmax(logit_slice, axis=1))
+                print(corrected)
+                print()
 
             batch_corrected_predictions = self.numpy_step2(out)
 
