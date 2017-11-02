@@ -69,6 +69,3 @@ def numpy_step2(logits):
         new_predictions.append(prediction)
 
     return np.asarray(new_predictions)
-
-
-import model.step1 as step1

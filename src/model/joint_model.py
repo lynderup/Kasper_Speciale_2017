@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import model.util as util
 
+import model.step1 as step1
+
 class ModelConfig:
     batch_size = 10
     num_input_classes = 20
