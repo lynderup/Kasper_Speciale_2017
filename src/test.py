@@ -1,52 +1,19 @@
 import tensorflow as tf
+from dataprovider.tmseg_dataset_provider import TMSEGDatasetProvider
 
+dataprovider = TMSEGDatasetProvider(batch_size=10)
+handle, iterator = dataprovider.get_iterator()
 
-def find_endpints(batch):
-
-    end_points_batch = []
-    for sequence in batch:
-
-        in_ones = False
-        end_points = []
-
-        for i, x in enumerate(sequence):
-            if x == 1:
-                if not in_ones:
-                    in_ones = True
-                    end_points.append(i)
-            else:
-                if in_ones:
-                    in_ones = False
-                    end_points.append(i - 1)
-
-        end_points_batch.append(end_points)
-
-    return end_points_batch
-
-def test_map(endpoint):
-    return tf.squeeze(tf.slice(a, [a_dim, tf.minimum(endpoint - 1, tf.shape(a)[1] - 3)], [1, 3]))
-
-a = tf.constant([[0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1],
-                 [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0]])
-
-# b = tf.constant([[[0, 4], [0, 5], [0, 6]], [[1, 2], [1, 3], [1, 4]]])
-# c = tf.gather_nd(params=a, indices=b)
-
-endpoints_t = tf.placeholder(tf.int32, shape=[None])
-a_dim = tf.placeholder(tf.int32, shape=[])
-
-slices = tf.map_fn(test_map, endpoints_t)
+lengths, sequences, structures_step1, structures_step3 = iterator.get_next()
 
 with tf.Session() as sess:
 
-    input = sess.run(a)
-    endpoints = find_endpints(input)
+    sess.run(dataprovider.get_table_init_op())
 
-    print(endpoints)
-    for i, e in enumerate(endpoints):
-        feed_dict = {endpoints_t: e,
-                     a_dim: i}
-        out = sess.run(slices, feed_dict=feed_dict)
-        print(out)
+    test_handle, _ = sess.run(dataprovider.get_test_iterator_handle())  # get_handle returns (handle, init_op)
+    test_feed = {handle: test_handle}
 
-    # print(sess.run(endpoints_t, feed_dict={endpoints_t:endpoints[0]}))
+    step1, step3 = sess.run([structures_step1, structures_step3], feed_dict=test_feed)
+
+    print(step1[0].tolist())
+    print(step3[0].tolist())

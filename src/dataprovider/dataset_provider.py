@@ -10,7 +10,6 @@ UNKNOWN = 0
 MEMBRANE = 0
 NOTMEMBRANE = 1
 
-
 structure_to_step1_target_dict = {INSIDE: NOTMEMBRANE,
                                   HELIX: MEMBRANE,
                                   OUTSIDE: NOTMEMBRANE,
@@ -21,11 +20,30 @@ values = tf.convert_to_tensor((NOTMEMBRANE, MEMBRANE, NOTMEMBRANE, NOTMEMBRANE),
 table = tf.contrib.lookup.HashTable(tf.contrib.lookup.KeyValueTensorInitializer(keys, values), -1)
 
 
+def scan_fn(acc, x):
+    return tf.cond(tf.equal(x, MEMBRANE),
+                   lambda: tf.cond(acc[1],
+                                   lambda: (0, True),
+                                   lambda: (1, True)),
+                   lambda: (0, False))
+
+
 def structure_to_step_targets(lengths, sequence, structure):
     # step1_target = tf.map_fn(lambda s: structure_to_step1_target_dict[s], structure)
     step1_target = table.lookup(structure)
 
-    return lengths, sequence, step1_target
+    initializer = (0, False)
+
+    forward = tf.scan(scan_fn, step1_target, initializer=initializer, back_prop=False)[0]
+    backward = tf.reverse(tf.scan(scan_fn,
+                                  tf.reverse(step1_target, axis=[0]),
+                                  initializer=initializer,
+                                  back_prop=False)[0], axis=[0])
+
+    # Assumption that no membrane has length one
+    step3_target = forward + backward
+
+    return lengths, sequence, step1_target, step3_target
 
 
 def _parse_function(example_proto):
@@ -50,7 +68,6 @@ def _parse_function(example_proto):
 
 
 class DatasetProvider:
-
     def __init__(self, dataset_path, filenames, batch_size):
         self.dataset_path = dataset_path
 
@@ -64,7 +81,6 @@ class DatasetProvider:
         return table.init
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
-
         filename_suffix = ".tfrecord"
         paths = [self.dataset_path + filename + filename_suffix for filename in filenames]
 
@@ -74,7 +90,7 @@ class DatasetProvider:
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=1000)
-        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None]))
+        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None], [None]))
 
         return dataset
 

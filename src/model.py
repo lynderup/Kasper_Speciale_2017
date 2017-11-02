@@ -39,10 +39,11 @@ class Model:
 
         # Data input
         with tf.variable_scope("Input", reuse=None):
-            lengths, sequences, structures_step1 = self.build_data_input()
+            lengths, sequences, structures_step1, structures_step3 = self.build_data_input()
             self.lengths = lengths
             self.sequences = sequences
             self.structures_step1 = structures_step1
+            self.structures_step3 = structures_step3
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
@@ -57,8 +58,8 @@ class Model:
                 self.logits_placeholder = tf.placeholder(logits.dtype,
                                                          shape=logits.get_shape(),
                                                          name="logits_placeholder")
-                self.targets_placeholder = tf.placeholder(tf.float32,#structures_step1.dtype,
-                                                          shape=self.structures_step1.get_shape(),
+                self.targets_placeholder = tf.placeholder(tf.float32,  # structures_step3.dtype,
+                                                          shape=self.structures_step3.get_shape(),
                                                           name="targets_placeholder")
 
                 self.build_model_step3(embedding=self.embeddings_placeholder,
@@ -86,7 +87,7 @@ class Model:
 
             with tf.variable_scope("Step3", reuse=None):
                 var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Model/Step3')
-                cross_entropy_loss_step3 = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.target_slices,
+                cross_entropy_loss_step3 = tf.nn.softmax_cross_entropy_with_logits(labels=self.target_slices,
                                                                                    logits=self.sigmoid_output)
                 cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
@@ -99,13 +100,13 @@ class Model:
 
     def build_data_input(self):
         self.handle, self.iterator = self.dataprovider.get_iterator()
-        lengths, sequences, structures_step1 = self.iterator.get_next()
+        lengths, sequences, structures_step1, structures_step3 = self.iterator.get_next()
 
         #  TODO: Tensors in wrong shapes. Need fixing!!!
         sequences = tf.transpose(sequences, perm=[1, 0])
         structures_step1 = tf.transpose(structures_step1, perm=[1, 0])
 
-        return lengths, sequences, structures_step1
+        return lengths, sequences, structures_step1, structures_step3
 
     def build_model_step1(self, sequences, lengths):
         config = self.config
@@ -227,7 +228,8 @@ class Model:
         self.membrane_endpoints = membrane_endpoints
         self.batch_index = batch_index
 
-        _input = tf.sigmoid(logits)
+        # _input = tf.sigmoid(logits)
+        _input = logits
 
         new_input = tf.concat([embedding, _input], axis=2)
 
@@ -237,11 +239,18 @@ class Model:
                                         batch_index, 0],
                                        [11, 1, -1]), axis=1)
 
+        # Was once sequence major
+        # def target_slice_map(end_point):
+        #     return tf.squeeze(tf.slice(targets,
+        #                                [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[0] - 11)),
+        #                                 batch_index],
+        #                                [11, 1]), axis=1)
+
         def target_slice_map(end_point):
             return tf.squeeze(tf.slice(targets,
-                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[0] - 11)),
-                                        batch_index],
-                                       [11, 1]), axis=1)
+                                       [batch_index,
+                                        tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[1] - 11))],
+                                       [1, 11]), axis=0)
 
         input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.float32)
         target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.float32)
@@ -251,13 +260,16 @@ class Model:
 
         window_size = 11
         input_size = 12
-        num_hidden_units = 100
+        num_hidden_units = 1000
 
         hidden_w = tf.get_variable("hidden_w", [window_size * input_size, num_hidden_units], dtype=tf.float32)
         hidden_b = tf.get_variable("hidden_b", [num_hidden_units], dtype=tf.float32)
 
+        self.keep_prop = tf.placeholder(tf.float32, shape=())
+
         _input_slices = tf.reshape(input_slices, shape=(-1, window_size * input_size))
         hidden_output = tf.sigmoid(tf.matmul(_input_slices, hidden_w) + hidden_b)
+        # hidden_output = tf.nn.dropout(hidden_output, self.keep_prop)
 
         sigmoid_w = tf.get_variable("sigmoid_w", [num_hidden_units, window_size], dtype=tf.float32)
         sigmoid_b = tf.get_variable("sigmoid_b", [window_size], dtype=tf.float32)
@@ -316,10 +328,10 @@ class Model:
                 fetches = [merged_sum,
                            self.train_step_step1,
                            self.embedded_input,
-                           self.structures_step1,
+                           self.structures_step3,
                            self.logits_step1]
 
-                summary, _, emb, targets, out_step1 = sess.run(fetches=fetches, feed_dict=train_feed)
+                summary, _, emb, targets_step3, out_step1 = sess.run(fetches=fetches, feed_dict=train_feed)
 
                 batch_membranes = self.find_membranes(out_step1)
                 filtered_batch_membranes = self.filter_membranes(batch_membranes)
@@ -329,7 +341,8 @@ class Model:
                                   self.batch_index: batch_index,
                                   self.embeddings_placeholder: emb,
                                   self.logits_placeholder: out_step1,
-                                  self.targets_placeholder: targets}
+                                  self.targets_placeholder: targets_step3,
+                                  self.keep_prop: 0.5}
 
                     sess.run(self.train_step_step3, feed_dict=step3_feed)
 
@@ -344,7 +357,8 @@ class Model:
 
         lengths = self.lengths
         sequences = self.sequences
-        structures = self.structures_step1
+        structures_step1 = self.structures_step1
+        structures_step3 = self.structures_step3
         logits = self.logits_step1
 
         embeddings = self.embedded_input
@@ -360,13 +374,14 @@ class Model:
                 self.dataprovider.get_test_iterator_handle())  # get_handle returns (handle, init_op)
             test_feed = {handle: test_handle}
 
-            _lengths, inputs, targets, emb, out = sess.run([lengths, sequences, structures, embeddings, logits],
-                                                           feed_dict=test_feed)
+            fetches = [lengths, sequences, structures_step1, structures_step3, embeddings, logits]
+            _lengths, inputs, targets_step1, targets_step3, emb, out = sess.run(fetches=fetches,
+                                                                                feed_dict=test_feed)
 
             # Switch sequence dimension with batch dimension so it is batch-major
             batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
             batch_inputs = np.swapaxes(inputs, 0, 1)
-            batch_targets = np.swapaxes(targets, 0, 1)
+            batch_targets = np.swapaxes(targets_step1, 0, 1)
 
             batch_membranes = self.find_membranes(out)
             filtered_batch_membranes = self.filter_membranes(batch_membranes)
@@ -377,9 +392,11 @@ class Model:
                           self.batch_index: 0,
                           self.embeddings_placeholder: emb,
                           self.logits_placeholder: out,
-                          self.targets_placeholder: targets}
+                          self.targets_placeholder: targets_step3,
+                          self.keep_prop: 1}
 
-            step3_logits, target_slices = sess.run([self.sigmoid_output, self.target_slices], feed_dict=step3_feed)
+            step3_logits, target_slices, loss = sess.run([self.sigmoid_output, self.target_slices, self.loss_step3],
+                                                         feed_dict=step3_feed)
             # endpoint_corrections = np.argmax(step3_logits, axis=2)
             endpoint_corrections = step3_logits
 
@@ -389,10 +406,11 @@ class Model:
                 logit_slice = out[begin:begin + 11, 0, :]
                 print(logit_slice.shape)
 
-                print(window)
+                print(np.argmax(window, axis=0))
                 print(np.argmax(logit_slice, axis=1))
-                print(corrected)
+                print(np.argmax(corrected, axis=0))
                 print()
+            print(loss)
 
             batch_corrected_predictions = self.numpy_step2(out)
 
