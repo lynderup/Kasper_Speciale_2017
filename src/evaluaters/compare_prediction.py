@@ -66,8 +66,15 @@ def compare_predictions(predictions, measurement, should_print=False):
         number_of_predicted_tmh += predicted_tmh
         number_of_observed_tmh += observed_tmh
 
-    precision = number_of_correct_predictions / number_of_predicted_tmh
-    recall = number_of_correct_predictions / number_of_observed_tmh
+    if number_of_predicted_tmh != 0:
+        precision = number_of_correct_predictions / number_of_predicted_tmh
+    else:
+        precision = 0
 
+    if number_of_observed_tmh != 0:
+        recall = number_of_correct_predictions / number_of_observed_tmh
+    else:
+        # There should always be observed tmh
+        recall = 1
 
     return precision, recall
