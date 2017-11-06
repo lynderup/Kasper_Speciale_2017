@@ -3,6 +3,7 @@ import numpy as np
 import model.util as util
 
 import model.step1 as step1
+import model.step3 as step3
 
 class ModelConfig:
     batch_size = 10
@@ -33,7 +34,26 @@ class Model:
             self.structures_step1 = structures_step1
             self.structures_step3 = structures_step3
 
-        self.model_step1 = step1.ModelStep1(config, logdir, dataprovider, handle, lengths, sequences, structures_step1)
+        self.model_step1 = step1.ModelStep1(config,
+                                            logdir + "step1/",
+                                            dataprovider,
+                                            handle,
+                                            lengths,
+                                            sequences,
+                                            structures_step1)
+
+        embedded_input = self.model_step1.embedded_input
+        logits_step1 = self.model_step1.logits_step1
+
+        self.model_step3 = step3.ModelStep3(config,
+                                            logdir + "step3/",
+                                            dataprovider,
+                                            handle,
+                                            self.model_step1.saver,
+                                            logdir + "step1/",
+                                            embedded_input,
+                                            logits_step1,
+                                            structures_step3)
 
     def build_data_input(self):
         handle, iterator = self.dataprovider.get_iterator()
@@ -46,18 +66,16 @@ class Model:
         return handle, lengths, sequences, structures_step1, structures_step3
 
     def train(self):
+        summary_writer = tf.summary.FileWriter(self.logdir)
+        summary_writer.add_graph(tf.get_default_graph())
+
         self.model_step1.train()
 
+        self.model_step3.train()
+
     def inference(self):
-        _lengths, inputs, targets_step1, out = self.model_step1.inference()
+        predictions = self.model_step1.inference()
 
-        # Switch sequence dimension with batch dimension so it is batch-major
-        batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
-        batch_inputs = np.swapaxes(inputs, 0, 1)
-        batch_targets = np.swapaxes(targets_step1, 0, 1)
-
-        batch_corrected_predictions = util.numpy_step2(out)
-
-        predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
+        self.model_step3.inference()
 
         return predictions

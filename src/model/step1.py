@@ -1,5 +1,9 @@
+import os
+
 import tensorflow as tf
 import numpy as np
+
+import model.util as util
 
 
 def sequence_cross_entropy(labels, logits, sequence_lengths):
@@ -19,6 +23,9 @@ class ModelStep1:
         self.logdir = logdir
         self.dataprovider = dataprovider
         self.handle = handle
+
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
 
         self.lengths = lengths
         self.sequences = sequences
@@ -114,8 +121,6 @@ class ModelStep1:
 
 
     def train(self):
-        summary_writer = tf.summary.FileWriter(self.logdir)
-        summary_writer.add_graph(tf.get_default_graph())
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -146,10 +151,10 @@ class ModelStep1:
 
                 summary, _ = sess.run(fetches=fetches, feed_dict=train_feed)
 
-                if i % 10 == 0:
-                    val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
-                    summary_writer.add_summary(val_loss, i)
-                    summary_writer.add_summary(summary, i)
+                # if i % 10 == 0:
+                #     val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
+                #     summary_writer.add_summary(val_loss, i)
+                #     summary_writer.add_summary(summary, i)
 
             self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
 
@@ -175,12 +180,12 @@ class ModelStep1:
             _lengths, inputs, targets_step1, out = sess.run(fetches=fetches,feed_dict=test_feed)
 
             # # Switch sequence dimension with batch dimension so it is batch-major
-            # batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
-            # batch_inputs = np.swapaxes(inputs, 0, 1)
-            # batch_targets = np.swapaxes(targets_step1, 0, 1)
+            batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
+            batch_inputs = np.swapaxes(inputs, 0, 1)
+            batch_targets = np.swapaxes(targets_step1, 0, 1)
 
-            # batch_corrected_predictions = joint_model.numpy_step2(out)
+            batch_corrected_predictions = util.numpy_step2(out)
 
-            # predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
+            predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
 
-        return _lengths, inputs, targets_step1, out
+        return predictions
