@@ -34,26 +34,28 @@ class Model:
             self.structures_step1 = structures_step1
             self.structures_step3 = structures_step3
 
-        self.model_step1 = step1.ModelStep1(config,
-                                            logdir + "step1/",
-                                            dataprovider,
-                                            handle,
-                                            lengths,
-                                            sequences,
-                                            structures_step1)
+        with tf.variable_scope("Step1", reuse=None):
+            self.model_step1 = step1.ModelStep1(config,
+                                                logdir + "step1/",
+                                                dataprovider,
+                                                handle,
+                                                lengths,
+                                                sequences,
+                                                structures_step1)
 
         embedded_input = self.model_step1.embedded_input
         logits_step1 = self.model_step1.logits_step1
 
-        self.model_step3 = step3.ModelStep3(config,
-                                            logdir + "step3/",
-                                            dataprovider,
-                                            handle,
-                                            self.model_step1.saver,
-                                            logdir + "step1/",
-                                            embedded_input,
-                                            logits_step1,
-                                            structures_step3)
+        with tf.variable_scope("Step3", reuse=None):
+            self.model_step3 = step3.ModelStep3(config,
+                                                logdir + "step3/",
+                                                dataprovider,
+                                                handle,
+                                                self.model_step1.saver,
+                                                logdir + "step1/",
+                                                embedded_input,
+                                                logits_step1,
+                                                structures_step3)
 
     def build_data_input(self):
         handle, iterator = self.dataprovider.get_iterator()
@@ -69,9 +71,12 @@ class Model:
         summary_writer = tf.summary.FileWriter(self.logdir)
         summary_writer.add_graph(tf.get_default_graph())
 
-        self.model_step1.train()
+        self.model_step1.train(summary_writer)
 
-        self.model_step3.train()
+        self.model_step3.train(summary_writer)
+
+        summary_writer.flush()
+        summary_writer.close()
 
     def inference(self):
         predictions = self.model_step1.inference()

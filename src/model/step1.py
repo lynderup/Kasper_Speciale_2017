@@ -35,29 +35,25 @@ class ModelStep1:
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
-            with tf.variable_scope("Step1", reuse=None):
-                logits = self.build_model_step1(sequences, lengths)
-                self.logits_step1 = logits
+            logits = self.build_model_step1(sequences, lengths)
+            self.logits_step1 = logits
 
-        trainable_vars = tf.trainable_variables()
-        self.saver = tf.train.Saver(trainable_vars)
-
+        var_list_step1 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step1')
+        self.saver = tf.train.Saver(var_list_step1)
 
         # Build training graph step1
         with tf.variable_scope("Training", reuse=None):
-            with tf.variable_scope("Step1", reuse=None):
-                var_list_step1 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Model/Step1')
 
-                cross_entropy_loss_step1 = tf.reduce_mean(sequence_cross_entropy(labels=structures_step1,
-                                                                                 logits=logits,
-                                                                                 sequence_lengths=lengths))
+            cross_entropy_loss_step1 = tf.reduce_mean(sequence_cross_entropy(labels=structures_step1,
+                                                                             logits=logits,
+                                                                             sequence_lengths=lengths))
 
-                learning_rate, loss_step1, train_step_step1 = self.build_training_graph(cross_entropy_loss_step1,
-                                                                                        var_list=var_list_step1,
-                                                                                        global_step=global_step)
-                self.learning_rate = learning_rate
-                self.loss_step1 = loss_step1
-                self.train_step_step1 = train_step_step1
+            learning_rate, loss_step1, train_step_step1 = self.build_training_graph(cross_entropy_loss_step1,
+                                                                                    var_list=var_list_step1,
+                                                                                    global_step=global_step)
+            self.learning_rate = learning_rate
+            self.loss_step1 = loss_step1
+            self.train_step_step1 = train_step_step1
 
     def build_model_step1(self, sequences, lengths):
         config = self.config
@@ -120,7 +116,7 @@ class ModelStep1:
         return learning_rate, loss, train_step
 
 
-    def train(self):
+    def train(self, summary_writer):
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -137,9 +133,9 @@ class ModelStep1:
             validation_handle, _ = sess.run(self.dataprovider.get_validation_iterator_handle())
             validation_feed = {handle: validation_handle}
 
-            sum_loss = tf.summary.scalar("loss", self.loss_step1)
-            sum_val_loss = tf.summary.scalar("validation loss", self.loss_step1)
-            sum_learn_rate = tf.summary.scalar("learning rate", self.learning_rate)
+            sum_loss = tf.summary.scalar("step1/loss", self.loss_step1)
+            sum_val_loss = tf.summary.scalar("step1/validation loss", self.loss_step1)
+            sum_learn_rate = tf.summary.scalar("step1/learning rate", self.learning_rate)
 
             merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
 
@@ -151,10 +147,10 @@ class ModelStep1:
 
                 summary, _ = sess.run(fetches=fetches, feed_dict=train_feed)
 
-                # if i % 10 == 0:
-                #     val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
-                #     summary_writer.add_summary(val_loss, i)
-                #     summary_writer.add_summary(summary, i)
+                if i % 10 == 0:
+                    val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
+                    summary_writer.add_summary(val_loss, i)
+                    summary_writer.add_summary(summary, i)
 
             self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
 

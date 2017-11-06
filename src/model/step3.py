@@ -28,42 +28,39 @@ class ModelStep3:
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
+            self.embeddings_placeholder = tf.placeholder(self.embedded_input.dtype,
+                                                         shape=self.embedded_input.get_shape(),
+                                                         name="embeddings_placeholder")
+            self.logits_placeholder = tf.placeholder(self.logits_step1.dtype,
+                                                     shape=self.logits_step1.get_shape(),
+                                                     name="logits_placeholder")
+            self.targets_placeholder = tf.placeholder(tf.float32,  # structures_step3.dtype,
+                                                      shape=self.structures_step3.get_shape(),
+                                                      name="targets_placeholder")
 
-            with tf.variable_scope("Step3", reuse=None):
-                self.embeddings_placeholder = tf.placeholder(self.embedded_input.dtype,
-                                                             shape=self.embedded_input.get_shape(),
-                                                             name="embeddings_placeholder")
-                self.logits_placeholder = tf.placeholder(self.logits_step1.dtype,
-                                                         shape=self.logits_step1.get_shape(),
-                                                         name="logits_placeholder")
-                self.targets_placeholder = tf.placeholder(tf.float32,  # structures_step3.dtype,
-                                                          shape=self.structures_step3.get_shape(),
-                                                          name="targets_placeholder")
+            self.build_model_step3(embedding=self.embeddings_placeholder,
+                                   logits=self.logits_placeholder,
+                                   targets=self.targets_placeholder)
 
-                self.build_model_step3(embedding=self.embeddings_placeholder,
-                                       logits=self.logits_placeholder,
-                                       targets=self.targets_placeholder)
-
-        trainable_vars = tf.trainable_variables()
-        self.saver = tf.train.Saver(trainable_vars)
+        var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
+        self.saver = tf.train.Saver(var_list_step3)
 
         # Build training graph step1
         with tf.variable_scope("Training", reuse=None):
-            with tf.variable_scope("Step3", reuse=None):
-                var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Model/Step3')
-                cross_entropy_loss_step3 = tf.nn.softmax_cross_entropy_with_logits(labels=self.target_slices,
-                                                                                   logits=self.sigmoid_output)
-                cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
-                learning_rate, loss_step3, train_step_step3 = self.build_training_graph(cross_entropy_loss_step3,
-                                                                                        var_list=var_list_step3,
-                                                                                        global_step=global_step)
-                self.loss_step3 = loss_step3
-                self.train_step_step3 = train_step_step3
+            learning_rate, loss_step3, train_step_step3 = self.build_training_graph(var_list=var_list_step3,
+                                                                                    global_step=global_step)
+            self.learning_rate = learning_rate
+            self.loss_step3 = loss_step3
+            self.train_step_step3 = train_step_step3
 
 
     def build_model_step3(self, embedding, logits, targets):
         # config = self.config
+        window_size = 11
+        input_size = 12
+        num_hidden_units = 1000
+
         membrane_endpoints = tf.placeholder(tf.int32, shape=[None])
         batch_index = tf.placeholder(tf.int32, shape=[])
 
@@ -77,32 +74,21 @@ class ModelStep3:
 
         def new_input_slice_map(end_point):
             return tf.squeeze(tf.slice(new_input,
-                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(new_input)[0] - 11)),
+                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(new_input)[0] - window_size)),
                                         batch_index, 0],
-                                       [11, 1, -1]), axis=1)
-
-        # Was once sequence major
-        # def target_slice_map(end_point):
-        #     return tf.squeeze(tf.slice(targets,
-        #                                [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[0] - 11)),
-        #                                 batch_index],
-        #                                [11, 1]), axis=1)
+                                       [window_size, 1, -1]), axis=1)
 
         def target_slice_map(end_point):
             return tf.squeeze(tf.slice(targets,
                                        [batch_index,
-                                        tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[1] - 11))],
-                                       [1, 11]), axis=0)
+                                        tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[1] - window_size))],
+                                       [1, window_size]), axis=0)
 
-        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.float32)
-        target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.float32)
+        input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.float32, back_prop=False)
+        target_slices = tf.map_fn(target_slice_map, membrane_endpoints, dtype=tf.float32, back_prop=False)
 
         self.input_slices = input_slices
         self.target_slices = target_slices
-
-        window_size = 11
-        input_size = 12
-        num_hidden_units = 1000
 
         hidden_w = tf.get_variable("hidden_w", [window_size * input_size, num_hidden_units], dtype=tf.float32)
         hidden_b = tf.get_variable("hidden_b", [num_hidden_units], dtype=tf.float32)
@@ -121,8 +107,14 @@ class ModelStep3:
 
         self.sigmoid_output = sigmoid_output
 
-    def build_training_graph(self, cross_entropy_loss, var_list, global_step):
+        self.l2_reg_loss = tf.nn.l2_loss(hidden_w) + tf.nn.l2_loss(sigmoid_w)
+
+    def build_training_graph(self, var_list, global_step):
         config = self.config
+
+        cross_entropy_loss_step3 = tf.nn.softmax_cross_entropy_with_logits(labels=self.target_slices,
+                                                                           logits=self.sigmoid_output)
+        cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
         learning_rate = tf.train.exponential_decay(config.starting_learning_rate,
                                                    global_step,
@@ -132,20 +124,17 @@ class ModelStep3:
 
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
-        loss = cross_entropy_loss
+        loss = cross_entropy_loss_step3 + self.l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step
 
-    def train(self):
-        # summary_writer = tf.summary.FileWriter(self.logdir)
-        # summary_writer.add_graph(tf.get_default_graph())
+    def train(self, summary_writer):
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(self.dataprovider.get_table_init_op())
             self.saver_step1.restore(sess, self.logdir_step1 + "checkpoints/model.ckpt")
-            # sess.run(self.iterator.initializer)
 
             handle = self.handle
             train_handle, _ = sess.run(
@@ -156,11 +145,11 @@ class ModelStep3:
                 self.dataprovider.get_validation_iterator_handle())  # get_handle returns (handle, init_op)
             validation_feed = {handle: validation_handle}
 
-            # sum_loss = tf.summary.scalar("loss", self.loss_step1)
-            # sum_val_loss = tf.summary.scalar("validation loss", self.loss_step1)
-            # sum_learn_rate = tf.summary.scalar("learning rate", self.learning_rate)
+            sum_loss = tf.summary.scalar("step3/loss", self.loss_step3)
+            sum_val_loss = tf.summary.scalar("step3/validation loss", self.loss_step3)
+            sum_learn_rate = tf.summary.scalar("step3/learning rate", self.learning_rate)
 
-            # merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
+            merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
 
             for i in range(self.config.train_steps):
                 print(i)
@@ -182,12 +171,12 @@ class ModelStep3:
                                   self.targets_placeholder: targets_step3,
                                   self.keep_prop: 0.5}
 
-                    sess.run(self.train_step_step3, feed_dict=step3_feed)
+                    summary, _ = sess.run([merged_sum, self.train_step_step3], feed_dict=step3_feed)
 
-                # if i % 10 == 0:
-                #     val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
-                #     summary_writer.add_summary(val_loss, i)
-                #     summary_writer.add_summary(summary, i)
+                    if batch_index == 0:
+                        # val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
+                        # summary_writer.add_summary(val_loss, i)
+                        summary_writer.add_summary(summary, i)
 
             self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
 
