@@ -57,7 +57,9 @@ class ModelStep3:
 
     def build_model_step3(self, embedding, logits, targets):
         # config = self.config
-        window_size = 11
+
+        window_radius = 15
+        window_size = window_radius * 2 + 1
         input_size = 12
         num_hidden_units = 1000
 
@@ -74,14 +76,16 @@ class ModelStep3:
 
         def new_input_slice_map(end_point):
             return tf.squeeze(tf.slice(new_input,
-                                       [tf.maximum(0, tf.minimum(end_point - 5, tf.shape(new_input)[0] - window_size)),
+                                       [tf.maximum(0, tf.minimum(end_point - window_radius,
+                                                                 tf.shape(new_input)[0] - window_size)),
                                         batch_index, 0],
                                        [window_size, 1, -1]), axis=1)
 
         def target_slice_map(end_point):
             return tf.squeeze(tf.slice(targets,
                                        [batch_index,
-                                        tf.maximum(0, tf.minimum(end_point - 5, tf.shape(targets)[1] - window_size))],
+                                        tf.maximum(0, tf.minimum(end_point - window_radius,
+                                                                 tf.shape(targets)[1] - window_size))],
                                        [1, window_size]), axis=0)
 
         input_slices = tf.map_fn(new_input_slice_map, membrane_endpoints, dtype=tf.float32, back_prop=False)
