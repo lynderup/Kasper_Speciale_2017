@@ -17,7 +17,8 @@ class TMSEGDatasetProvider(dataset_provider.DatasetProvider):
 
         trainset = ["opm_set1", "opm_set2"]
         validationset = ["opm_set3"]
-        testset = ["opm_set4"]
+        # testset = ["opm_set4"]
+        testset = ["opm_set3"] # To not overfit hyperparameters on testset
 
         filenames = (trainset, validationset, testset)
 
