@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import math
 
-import dataprovider.dataset_provider as dataset_provider
+import dataprovider.mappings as mappings
 
 
 def find_membranes_aux(batch_predictions):
@@ -15,7 +15,7 @@ def find_membranes_aux(batch_predictions):
         membrane_start_index = -1
 
         for i, z in enumerate(prediction):
-            if z == dataset_provider.MEMBRANE:
+            if z == mappings.MEMBRANE:
                 if not in_membrane:
                     in_membrane = True
                     membrane_start_index = i
@@ -64,11 +64,11 @@ def numpy_step2(batch_predictions):
             length = end - start
 
             if length <= 5:
-                prediction[start:end] = [dataset_provider.NOTMEMBRANE] * length
+                prediction[start:end] = [mappings.NOTMEMBRANE] * length
 
             if length >= 35:
-                new_membrane = [dataset_provider.MEMBRANE] * length
-                new_membrane[math.floor(length / 2)] = dataset_provider.NOTMEMBRANE
+                new_membrane = [mappings.MEMBRANE] * length
+                new_membrane[math.floor(length / 2)] = mappings.NOTMEMBRANE
                 prediction[start:end] = new_membrane
 
         new_predictions.append(prediction)

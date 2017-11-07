@@ -1,11 +1,9 @@
 import tensorflow as tf
-import numpy as np
 import time
-
-import model.util as util
 
 import model.step1 as step1
 import model.step3 as step3
+
 
 class ModelConfig:
     batch_size = 10

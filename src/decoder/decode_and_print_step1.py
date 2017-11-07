@@ -1,4 +1,4 @@
-from decoder.write_to_fasta import write_to_fasta
+# from decoder.write_to_fasta import write_to_fasta
 
 import evaluaters.compare_prediction as compare_prediction
 

@@ -1,27 +1,9 @@
 import tensorflow as tf
-
-# Structure constants
-INSIDE = 1
-HELIX = 2
-OUTSIDE = 3
-UNKNOWN = 0
-
-# Step 1 target constants
-MEMBRANE = 0
-NOTMEMBRANE = 1
-
-structure_to_step1_target_dict = {INSIDE: NOTMEMBRANE,
-                                  HELIX: MEMBRANE,
-                                  OUTSIDE: NOTMEMBRANE,
-                                  UNKNOWN: NOTMEMBRANE}
-
-keys = tf.convert_to_tensor((INSIDE, HELIX, OUTSIDE, UNKNOWN), dtype=tf.int64)
-values = tf.convert_to_tensor((NOTMEMBRANE, MEMBRANE, NOTMEMBRANE, NOTMEMBRANE), dtype=tf.int64)
-table = tf.contrib.lookup.HashTable(tf.contrib.lookup.KeyValueTensorInitializer(keys, values), -1)
+import dataprovider.mappings as mappings
 
 
 def scan_fn(acc, x):
-    return tf.cond(tf.equal(x, MEMBRANE),
+    return tf.cond(tf.equal(x, mappings.MEMBRANE),
                    lambda: tf.cond(acc[1],
                                    lambda: (0, True),
                                    lambda: (1, True)),
@@ -30,7 +12,7 @@ def scan_fn(acc, x):
 
 def structure_to_step_targets(lengths, sequence, structure):
     # step1_target = tf.map_fn(lambda s: structure_to_step1_target_dict[s], structure)
-    step1_target = table.lookup(structure)
+    step1_target = mappings.table.lookup(structure)
 
     initializer = (0, False)
 
@@ -78,7 +60,7 @@ class DatasetProvider:
         self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
-        return table.init
+        return mappings.table.init
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
         filename_suffix = ".tfrecord"
