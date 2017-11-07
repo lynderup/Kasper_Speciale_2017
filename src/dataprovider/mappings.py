@@ -40,26 +40,26 @@ structure_to_step1_target_dict = {INSIDE: NONMEMBRANE,
                                   UNKNOWN: NONMEMBRANE}
 
 # hydrophobicity, charge, polarity
-sequence_to__dict = {ALA: (1.8, 0, 0),
-                     ARG: (-4.5, 1, 1),
-                     ASN: (-3.5, 0, 1),
-                     ASP: (-3.5, -1, 1),
-                     CYS: (2.5, 0, 1),
-                     GLU: (-3.5, -1, 1),
-                     GLN: (-3.5, 0, 1),
-                     GLY: (-0.4, 0, 0),
-                     HIS: (-3.2, 0, 1),
-                     ILE: (4.5, 0, 0),
-                     LEU: (3.8, 0, 0),
-                     LYS: (-3.9, 1, 1),
-                     MET: (1.9, 0, 0),
-                     PHE: (2.8, 0, 0),
-                     PRO: (-1.6, 0, 0),
-                     SER: (-0.8, 0, 1),
-                     THR: (-0.7, 0, 1),
-                     TRP: (-0.9, 0, 0),
-                     TYR: (-1.3, 0, 1),
-                     VAL: (4.2, 0, 0)}
+sequence_to_sup_data_dict = {ALA: (1.8, 0, 0),
+                             ARG: (-4.5, 1, 1),
+                             ASN: (-3.5, 0, 1),
+                             ASP: (-3.5, -1, 1),
+                             CYS: (2.5, 0, 1),
+                             GLU: (-3.5, -1, 1),
+                             GLN: (-3.5, 0, 1),
+                             GLY: (-0.4, 0, 0),
+                             HIS: (-3.2, 0, 1),
+                             ILE: (4.5, 0, 0),
+                             LEU: (3.8, 0, 0),
+                             LYS: (-3.9, 1, 1),
+                             MET: (1.9, 0, 0),
+                             PHE: (2.8, 0, 0),
+                             PRO: (-1.6, 0, 0),
+                             SER: (-0.8, 0, 1),
+                             THR: (-0.7, 0, 1),
+                             TRP: (-0.9, 0, 0),
+                             TYR: (-1.3, 0, 1),
+                             VAL: (4.2, 0, 0)}
 
 
 def dict_to_hashtable(dict):
@@ -73,6 +73,16 @@ def dict_to_hashtable(dict):
     return tf.contrib.lookup.HashTable(
         tf.contrib.lookup.KeyValueTensorInitializer(tf.convert_to_tensor(keys, dtype=tf.int64),
                                                     tf.convert_to_tensor(values, dtype=tf.int64)), -1)
+
+
+def dict_to_embedding_tensor(dict):
+
+    embedding = []
+    for i in range(len(sequence_to_sup_data_dict)):
+        embedding.append(sequence_to_sup_data_dict[i])
+
+    embedding_tensor = tf.convert_to_tensor(embedding, dtype=tf.float32)
+    return embedding_tensor
 
     # keys = tf.convert_to_tensor((INSIDE, HELIX, OUTSIDE, UNKNOWN), dtype=tf.int64)
     # values = tf.convert_to_tensor((NOTMEMBRANE, MEMBRANE, NOTMEMBRANE, NOTMEMBRANE), dtype=tf.int64)

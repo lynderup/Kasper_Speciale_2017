@@ -17,7 +17,7 @@ def sequence_cross_entropy(labels, logits, sequence_lengths):
 
 class ModelStep1:
 
-    def __init__(self, config, logdir, dataprovider, handle, lengths, sequences, structures_step1):
+    def __init__(self, config, logdir, dataprovider, handle, lengths, sequences, sequence_sup_data, structures_step1):
 
         self.config = config
         self.logdir = logdir
@@ -35,7 +35,7 @@ class ModelStep1:
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
-            logits = self.build_model_step1(sequences, lengths)
+            logits = self.build_model_step1(sequences, sequence_sup_data, lengths)
             self.logits_step1 = logits
 
         var_list_step1 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step1')
@@ -55,12 +55,13 @@ class ModelStep1:
             self.loss_step1 = loss_step1
             self.train_step_step1 = train_step_step1
 
-    def build_model_step1(self, sequences, lengths):
+    def build_model_step1(self, sequences, sequence_sup_data, lengths):
         config = self.config
 
-        embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units], dtype=tf.float32)
+        embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units - 3], dtype=tf.float32)
 
         embedded_input = tf.nn.embedding_lookup(embedding, sequences)
+        embedded_input = tf.concat([embedded_input, sequence_sup_data], axis=2)
         self.embedded_input = embedded_input
 
         bidirectional_output = util.add_bidirectional_lstm_layer(embedded_input,
@@ -93,7 +94,6 @@ class ModelStep1:
         weights_list = tf.get_collection(tf.GraphKeys.WEIGHTS, scope='Step1')
         l2_reg_loss = 0
         for weight in weights_list:
-            print(weight)
             l2_reg_loss += tf.nn.l2_loss(weight)
 
         loss = cross_entropy_loss# + l2_reg_loss

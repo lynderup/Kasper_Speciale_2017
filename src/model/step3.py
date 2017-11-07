@@ -225,6 +225,8 @@ class ModelStep3:
 
             fetches = [self.logits_step3, self.target_slices, self.loss_step3]
 
+
+
             step3_logits, target_slices, loss = sess.run(fetches=fetches, feed_dict=step3_feed)
             # endpoint_corrections = np.argmax(step3_logits, axis=2)
             endpoint_corrections = step3_logits

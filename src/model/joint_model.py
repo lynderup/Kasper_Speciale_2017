@@ -14,7 +14,7 @@ class ModelConfig:
     decay_steps = 10
     decay_rate = 0.96
 
-    num_units = 10
+    num_units = 13
     train_steps = 300
 
 
@@ -31,9 +31,10 @@ class Model:
 
         # Data input
         with tf.variable_scope("Input", reuse=None):
-            handle, lengths, sequences, structures_step1, structures_step3 = self.build_data_input()
+            handle, lengths, sequences, sequence_sup_data, structures_step1, structures_step3 = self.build_data_input()
             self.lengths = lengths
             self.sequences = sequences
+            self.sequence_sup_data = sequence_sup_data
             self.structures_step1 = structures_step1
             self.structures_step3 = structures_step3
 
@@ -44,6 +45,7 @@ class Model:
                                                 handle,
                                                 lengths,
                                                 sequences,
+                                                sequence_sup_data,
                                                 structures_step1)
 
         embedded_input = self.model_step1.embedded_input
@@ -67,13 +69,14 @@ class Model:
 
     def build_data_input(self):
         handle, iterator = self.dataprovider.get_iterator()
-        lengths, sequences, structures_step1, structures_step3 = iterator.get_next()
+        lengths, sequences, sequence_sup_data, structures_step1, structures_step3 = iterator.get_next()
 
         #  TODO: Tensors in wrong shapes. Need fixing!!!
+        sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
         sequences = tf.transpose(sequences, perm=[1, 0])
         structures_step1 = tf.transpose(structures_step1, perm=[1, 0])
 
-        return handle, lengths, sequences, structures_step1, structures_step3
+        return handle, lengths, sequences, sequence_sup_data, structures_step1, structures_step3
 
     def train(self):
         summary_writer = tf.summary.FileWriter(self.logdir)

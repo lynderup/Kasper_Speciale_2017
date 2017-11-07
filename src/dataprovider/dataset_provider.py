@@ -9,12 +9,19 @@ def scan_fn(acc, x):
                                    lambda: (1, True)),
                    lambda: (0, False))
 
+
 structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
+# sequence_to_sup_data_dict_table = mappings.dict_to_hashtable(mappings.sequence_to_sup_data_dict)
+sequence_to_sup_data_dict_table = mappings.dict_to_embedding_tensor(mappings.sequence_to_sup_data_dict)
+
 
 
 def structure_to_step_targets(lengths, sequence, structure):
     # step1_target = tf.map_fn(lambda s: structure_to_step1_target_dict[s], structure)
     step1_target = structure_to_step1_target_table.lookup(structure)
+
+    # sequence_sup_data = sequence_to_sup_data_dict_table.lookup(sequence)
+    sequence_sup_data = tf.nn.embedding_lookup(sequence_to_sup_data_dict_table, sequence)
 
     initializer = (0, False)
 
@@ -27,7 +34,7 @@ def structure_to_step_targets(lengths, sequence, structure):
     # Assumption that no membrane has length one
     step3_target = forward + backward
 
-    return lengths, sequence, step1_target, step3_target
+    return lengths, sequence, sequence_sup_data, step1_target, step3_target
 
 
 def _parse_function(example_proto):
@@ -62,6 +69,8 @@ class DatasetProvider:
         self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
+        # init_op = tf.group(sequence_to_sup_data_dict_table.init,
+        #                    structure_to_step1_target_table.init)
         return structure_to_step1_target_table.init
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
@@ -74,7 +83,7 @@ class DatasetProvider:
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=1000)
-        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None], [None]))
+        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], [None], [None]))
 
         return dataset
 
