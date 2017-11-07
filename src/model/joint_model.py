@@ -57,6 +57,9 @@ class Model:
                                                 logits_step1,
                                                 structures_step3)
 
+        # var_list = tf.get_collection(tf.GraphKeys.WEIGHTS)
+        # print(var_list)
+
     def build_data_input(self):
         handle, iterator = self.dataprovider.get_iterator()
         lengths, sequences, structures_step1, structures_step3 = iterator.get_next()

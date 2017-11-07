@@ -5,9 +5,10 @@ import numpy as np
 
 import model.util as util
 
-class ModelStep3:
 
-    def __init__(self,  config, logdir, dataprovider, handle, saver_step1, logdir_step1, embedded_input, logits_step1, structures_step3):
+class ModelStep3:
+    def __init__(self, config, logdir, dataprovider, handle, saver_step1, logdir_step1, embedded_input, logits_step1,
+                 structures_step3):
 
         self.config = config
         self.logdir = logdir
@@ -38,24 +39,23 @@ class ModelStep3:
                                                       shape=self.structures_step3.get_shape(),
                                                       name="targets_placeholder")
 
-            self.build_model_step3(embedding=self.embeddings_placeholder,
-                                   logits=self.logits_placeholder,
-                                   targets=self.targets_placeholder)
+            logits_step3 = self.build_model_step3(embedding=self.embeddings_placeholder,
+                                                  logits_step1=self.logits_placeholder,
+                                                  targets=self.targets_placeholder)
+            self.logits_step3 = logits_step3
 
         var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
         self.saver = tf.train.Saver(var_list_step3)
 
         # Build training graph step1
         with tf.variable_scope("Training", reuse=None):
-
             learning_rate, loss_step3, train_step_step3 = self.build_training_graph(var_list=var_list_step3,
                                                                                     global_step=global_step)
             self.learning_rate = learning_rate
             self.loss_step3 = loss_step3
             self.train_step_step3 = train_step_step3
 
-
-    def build_model_step3(self, embedding, logits, targets):
+    def build_model_step3(self, embedding, logits_step1, targets):
         # config = self.config
 
         window_radius = 15
@@ -69,8 +69,8 @@ class ModelStep3:
         self.membrane_endpoints = membrane_endpoints
         self.batch_index = batch_index
 
-        # _input = tf.sigmoid(logits)
-        _input = logits
+        # _input = tf.sigmoid(logits_step1)
+        _input = logits_step1
 
         new_input = tf.concat([embedding, _input], axis=2)
 
@@ -94,30 +94,26 @@ class ModelStep3:
         self.input_slices = input_slices
         self.target_slices = target_slices
 
-        hidden_w = tf.get_variable("hidden_w", [window_size * input_size, num_hidden_units], dtype=tf.float32)
-        hidden_b = tf.get_variable("hidden_b", [num_hidden_units], dtype=tf.float32)
+        _input_slices = tf.reshape(input_slices, shape=(-1, window_size * input_size))
+
+        hidden_logits = util.add_fully_connected_layer(_input_slices,
+                                                       window_size * input_size,
+                                                       num_hidden_units,
+                                                       "hidden")
+        hidden_output = tf.sigmoid(hidden_logits)
 
         self.keep_prop = tf.placeholder(tf.float32, shape=())
+        hidden_output = tf.nn.dropout(hidden_output, self.keep_prop)
 
-        _input_slices = tf.reshape(input_slices, shape=(-1, window_size * input_size))
-        hidden_output = tf.sigmoid(tf.matmul(_input_slices, hidden_w) + hidden_b)
-        # hidden_output = tf.nn.dropout(hidden_output, self.keep_prop)
+        logits_step3 = util.add_fully_connected_layer(hidden_output, num_hidden_units, window_size, "softmax")
 
-        sigmoid_w = tf.get_variable("sigmoid_w", [num_hidden_units, window_size], dtype=tf.float32)
-        sigmoid_b = tf.get_variable("sigmoid_b", [window_size], dtype=tf.float32)
-
-        sigmoid_output = tf.matmul(hidden_output, sigmoid_w) + sigmoid_b
-        # softmax_output = tf.reshape(_softmax_output, shape=(-1, window_size, config.num_output_classes))
-
-        self.sigmoid_output = sigmoid_output
-
-        self.l2_reg_loss = tf.nn.l2_loss(hidden_w) + tf.nn.l2_loss(sigmoid_w)
+        return logits_step3
 
     def build_training_graph(self, var_list, global_step):
         config = self.config
 
         cross_entropy_loss_step3 = tf.nn.softmax_cross_entropy_with_logits(labels=self.target_slices,
-                                                                           logits=self.sigmoid_output)
+                                                                           logits=self.logits_step3)
         cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
         learning_rate = tf.train.exponential_decay(config.starting_learning_rate,
@@ -128,7 +124,12 @@ class ModelStep3:
 
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
-        loss = cross_entropy_loss_step3 + self.l2_reg_loss
+        weights_list = tf.get_collection(tf.GraphKeys.WEIGHTS, scope='Step3')
+        l2_reg_loss = 0
+        for weight in weights_list:
+            l2_reg_loss += tf.nn.l2_loss(weight)
+
+        loss = cross_entropy_loss_step3 + l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step
@@ -243,4 +244,4 @@ class ModelStep3:
             # batch_corrected_predictions = self.numpy_step2(out)
             # predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
 
-        # return predictions
+            # return predictions

@@ -63,37 +63,11 @@ class ModelStep1:
         embedded_input = tf.nn.embedding_lookup(embedding, sequences)
         self.embedded_input = embedded_input
 
-        fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=config.num_units,
-                                                    forget_bias=0,
-                                                    cell_clip=None,
-                                                    use_peephole=False)
-        bw_lstm = tf.contrib.rnn.TimeReversedFusedRNN(fw_lstm)
+        output = util.add_bidirectional_lstm_layer(embedded_input, lengths, config.num_units, config.batch_size)
 
-        initial_state = (tf.zeros([config.batch_size, config.num_units], tf.float32),
-                         tf.zeros([config.batch_size, config.num_units], tf.float32))
+        _output = tf.reshape(output, [-1, config.num_units * 2])
 
-        fw_output, fw_state = fw_lstm(embedded_input,
-                                      initial_state=initial_state,
-                                      dtype=None,
-                                      sequence_length=lengths,
-                                      scope="fw_rnn")
-
-        bw_output, bw_state = bw_lstm(embedded_input,
-                                      initial_state=initial_state,
-                                      dtype=None,
-                                      sequence_length=lengths,
-                                      scope="bw_rnn")
-
-        self.fw_output = fw_output
-
-        softmax_w = tf.get_variable("softmax_w", [config.num_units * 2, config.num_output_classes], dtype=tf.float32)
-        softmax_b = tf.get_variable("softmax_b", [config.num_output_classes], dtype=tf.float32)
-
-        _fw_output = tf.reshape(fw_output, [-1, config.num_units])
-        _bw_output = tf.reshape(bw_output, [-1, config.num_units])
-        _output = tf.concat([_fw_output, _bw_output], 1)
-
-        _logits = tf.matmul(_output, softmax_w) + softmax_b
+        _logits = util.add_fully_connected_layer(_output, config.num_units * 2, config.num_output_classes, "softmax")
 
         logits = tf.reshape(_logits, [-1, config.batch_size, config.num_output_classes])
 
@@ -110,7 +84,13 @@ class ModelStep1:
 
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
-        loss = cross_entropy_loss
+        weights_list = tf.get_collection(tf.GraphKeys.WEIGHTS, scope='Step1')
+        l2_reg_loss = 0
+        for weight in weights_list:
+            print(weight)
+            l2_reg_loss += tf.nn.l2_loss(weight)
+
+        loss = cross_entropy_loss + l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step
