@@ -209,11 +209,11 @@ class Model:
                 length = end - start
 
                 if length <= 5:
-                    prediction[start:end] = [mappings.NOTMEMBRANE] * length
+                    prediction[start:end] = [mappings.NONMEMBRANE] * length
 
                 if length >= 35:
                     new_membrane = [mappings.MEMBRANE] * length
-                    new_membrane[math.floor(length / 2)] = mappings.NOTMEMBRANE
+                    new_membrane[math.floor(length / 2)] = mappings.NONMEMBRANE
                     prediction[start:end] = new_membrane
 
             new_predictions.append(prediction)

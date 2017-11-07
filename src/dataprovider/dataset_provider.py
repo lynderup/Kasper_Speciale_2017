@@ -9,10 +9,12 @@ def scan_fn(acc, x):
                                    lambda: (1, True)),
                    lambda: (0, False))
 
+structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
+
 
 def structure_to_step_targets(lengths, sequence, structure):
     # step1_target = tf.map_fn(lambda s: structure_to_step1_target_dict[s], structure)
-    step1_target = mappings.table.lookup(structure)
+    step1_target = structure_to_step1_target_table.lookup(structure)
 
     initializer = (0, False)
 
@@ -60,7 +62,7 @@ class DatasetProvider:
         self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
-        return mappings.table.init
+        return structure_to_step1_target_table.init
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
         filename_suffix = ".tfrecord"
