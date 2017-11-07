@@ -95,6 +95,7 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size):
                                                 use_peephole=False)
     bw_lstm = tf.contrib.rnn.TimeReversedFusedRNN(fw_lstm)
 
+    # Cell-state and previous output
     initial_state = (tf.zeros([batch_size, num_units], tf.float32),
                      tf.zeros([batch_size, num_units], tf.float32))
 
@@ -102,19 +103,19 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size):
                                   initial_state=initial_state,
                                   dtype=None,
                                   sequence_length=lengths,
-                                  scope="fw_rnn")
+                                  scope="fw_lstm")
 
     bw_output, bw_state = bw_lstm(input_tensor,
                                   initial_state=initial_state,
                                   dtype=None,
                                   sequence_length=lengths,
-                                  scope="bw_rnn")
+                                  scope="bw_lstm")
 
-    with tf.variable_scope("fw_rnn", reuse=True):
+    with tf.variable_scope("fw_lstm", reuse=True):
         weight = tf.get_variable("kernel")
         tf.add_to_collection(tf.GraphKeys.WEIGHTS, weight)
 
-    with tf.variable_scope("bw_rnn", reuse=True):
+    with tf.variable_scope("bw_lstm", reuse=True):
         weight = tf.get_variable("kernel")
         tf.add_to_collection(tf.GraphKeys.WEIGHTS, weight)
 
