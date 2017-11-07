@@ -106,7 +106,7 @@ class ModelStep1:
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            sess.run(self.dataprovider.get_table_init_op)
+            sess.run(self.dataprovider.get_table_init_op())
             # sess.run(self.iterator.initializer)
 
             handle = self.handle
