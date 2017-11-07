@@ -1,5 +1,7 @@
 import tensorflow as tf
 import numpy as np
+import time
+
 import model.util as util
 
 import model.step1 as step1
@@ -15,11 +17,14 @@ class ModelConfig:
     decay_rate = 0.96
 
     num_units = 10
-    train_steps = 100
+    train_steps = 300
 
 
 class Model:
     def __init__(self, dataprovider, config, logdir):
+        print("Building graph")
+        start = time.time()
+
         self.logdir = logdir
         self.dataprovider = dataprovider
         self.config = config
@@ -56,6 +61,8 @@ class Model:
                                                 embedded_input,
                                                 logits_step1,
                                                 structures_step3)
+
+        print("Build graph in: %i milliseconds" % ((time.time() - start) * 1000))
 
         # var_list = tf.get_collection(tf.GraphKeys.WEIGHTS)
         # print(var_list)

@@ -63,7 +63,13 @@ class ModelStep1:
         embedded_input = tf.nn.embedding_lookup(embedding, sequences)
         self.embedded_input = embedded_input
 
-        output = util.add_bidirectional_lstm_layer(embedded_input, lengths, config.num_units, config.batch_size)
+        bidirectional_output = util.add_bidirectional_lstm_layer(embedded_input,
+                                                                 lengths,
+                                                                 config.num_units,
+                                                                 config.batch_size)
+
+        output = util.add_lstm_layer(bidirectional_output, lengths, config.num_units * 2, config.batch_size)
+        # output = bidirectional_output
 
         _output = tf.reshape(output, [-1, config.num_units * 2])
 
@@ -90,7 +96,7 @@ class ModelStep1:
             print(weight)
             l2_reg_loss += tf.nn.l2_loss(weight)
 
-        loss = cross_entropy_loss + l2_reg_loss
+        loss = cross_entropy_loss# + l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step

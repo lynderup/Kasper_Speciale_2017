@@ -122,3 +122,27 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size):
     output = tf.concat([fw_output, bw_output], axis=2)
 
     return output
+
+
+def add_lstm_layer(input_tensor, lengths, num_units, batch_size):
+
+    fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=num_units,
+                                                forget_bias=0,
+                                                cell_clip=None,
+                                                use_peephole=False)
+
+    # Cell-state and previous output
+    initial_state = (tf.zeros([batch_size, num_units], tf.float32),
+                     tf.zeros([batch_size, num_units], tf.float32))
+
+    output, state = fw_lstm(input_tensor,
+                                  initial_state=initial_state,
+                                  dtype=None,
+                                  sequence_length=lengths,
+                                  scope="lstm")
+
+    with tf.variable_scope("lstm", reuse=True):
+        weight = tf.get_variable("kernel")
+        tf.add_to_collection(tf.GraphKeys.WEIGHTS, weight)
+
+    return output
