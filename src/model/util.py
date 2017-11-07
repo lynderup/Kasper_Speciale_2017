@@ -3,8 +3,8 @@ import math
 
 import dataprovider.dataset_provider as dataset_provider
 
-def find_membranes(logits):
-    batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
+
+def find_membranes_aux(batch_predictions):
     batch_membranes = []
 
     for prediction in batch_predictions:
@@ -28,6 +28,11 @@ def find_membranes(logits):
     return np.asarray(batch_membranes)
 
 
+def find_membranes(logits):
+    batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
+    return find_membranes_aux(batch_predictions)
+
+
 def filter_membranes(batch_membranes):
 
     new_batch_membranes = []
@@ -47,14 +52,13 @@ def filter_membranes(batch_membranes):
     return np.asarray(new_batch_membranes)
 
 
-def numpy_step2(logits):
-    batch_predictions = np.swapaxes(np.argmax(logits, axis=2), 0, 1)
-    batch_membranes = find_membranes(logits)
+def numpy_step2(batch_predictions):
+    batch_membranes = find_membranes_aux(batch_predictions)
 
     new_predictions = []
 
     for i, membranes in enumerate(batch_membranes):
-        prediction = batch_predictions[i]
+        prediction = np.copy(batch_predictions[i])
         for start, end in membranes:
             length = end - start
 

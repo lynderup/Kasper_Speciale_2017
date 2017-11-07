@@ -29,7 +29,7 @@ def decode_and_print_step1(predictions, decoder):
     for prediction in predictions:
         prediction = cut_to_lengths(*prediction)
         prediction = decode(*prediction, decoder)
-        # print_predictions(*prediction)
+        print_predictions(*prediction)
 
         inputs, targets, _predictions, corrected_predictions = prediction
 

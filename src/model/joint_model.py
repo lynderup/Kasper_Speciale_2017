@@ -73,7 +73,7 @@ class Model:
 
         self.model_step1.train(summary_writer)
 
-        self.model_step3.train(summary_writer)
+        # self.model_step3.train(summary_writer)
 
         summary_writer.flush()
         summary_writer.close()
@@ -81,6 +81,6 @@ class Model:
     def inference(self):
         predictions = self.model_step1.inference()
 
-        self.model_step3.inference()
+        # self.model_step3.inference()
 
         return predictions

@@ -156,6 +156,11 @@ class ModelStep1:
 
     def inference(self):
 
+        set_lengths = []
+        set_inputs = []
+        set_targets = []
+        set_predictions = []
+
         lengths = self.lengths
         sequences = self.sequences
         structures_step1 = self.structures_step1
@@ -173,15 +178,22 @@ class ModelStep1:
             test_feed = {handle: test_handle}
 
             fetches = [lengths, sequences, structures_step1, logits]
-            _lengths, inputs, targets_step1, out = sess.run(fetches=fetches,feed_dict=test_feed)
 
-            # # Switch sequence dimension with batch dimension so it is batch-major
-            batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
-            batch_inputs = np.swapaxes(inputs, 0, 1)
-            batch_targets = np.swapaxes(targets_step1, 0, 1)
+            for i in range(4):
+                _lengths, inputs, targets_step1, out = sess.run(fetches=fetches,feed_dict=test_feed)
 
-            batch_corrected_predictions = util.numpy_step2(out)
+                # # Switch sequence dimension with batch dimension so it is batch-major
+                batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
+                batch_inputs = np.swapaxes(inputs, 0, 1)
+                batch_targets = np.swapaxes(targets_step1, 0, 1)
 
-            predictions = zip(_lengths, batch_inputs, batch_targets, batch_predictions, batch_corrected_predictions)
+                # batch_corrected_predictions = util.numpy_step2(out)
 
+                set_lengths.extend(_lengths)
+                set_inputs.extend(batch_inputs)
+                set_targets.extend(batch_targets)
+                set_predictions.extend(batch_predictions)
+
+        # predictions = zip(set_lengths, set_inputs, set_targets, set_predictions)
+        predictions = (set_lengths, set_inputs, set_targets, set_predictions)
         return predictions

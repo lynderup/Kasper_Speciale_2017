@@ -1,19 +1,24 @@
-import tensorflow as tf
-from dataprovider.tmseg_dataset_provider import TMSEGDatasetProvider
 
-dataprovider = TMSEGDatasetProvider(batch_size=10)
-handle, iterator = dataprovider.get_iterator()
+def read_fasta(filename):
 
-lengths, sequences, structures_step1, structures_step3 = iterator.get_next()
+    with open(filename, "r") as file:
+        file_parts = file.read().split(">")
+        file_parts.pop(0)
 
-with tf.Session() as sess:
+        return file_parts
 
-    sess.run(dataprovider.get_table_init_op())
 
-    test_handle, _ = sess.run(dataprovider.get_test_iterator_handle())  # get_handle returns (handle, init_op)
-    test_feed = {handle: test_handle}
+path = "datasets/tmseg/data/sets/"
+fasta_path = "unmasked_hval0/"
 
-    step1, step3 = sess.run([structures_step1, structures_step3], feed_dict=test_feed)
+opm_set1 = "opm_set1"
+opm_set2 = "opm_set2"
+opm_set3 = "opm_set3"
+opm_set4 = "opm_set4"
 
-    print(step1[0].tolist())
-    print(step3[0].tolist())
+sets = [opm_set1, opm_set2, opm_set3, opm_set4]
+
+for set in sets:
+    parts = read_fasta(path + fasta_path + set + ".fasta")
+    print(len(parts))
+
