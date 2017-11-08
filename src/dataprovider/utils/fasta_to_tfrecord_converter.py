@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-import dataprovider.read_fasta as read_fasta
+import dataprovider.utils.read_fasta as read_fasta
 
 
 def fasta_entry_to_example(encoder, fasta_entry):

@@ -1,10 +1,10 @@
 import os
+
 import tensorflow as tf
+from dataprovider.utils.fasta_to_tfrecord_converter import fasta_to_tfrecord
 
 import dataprovider.dataset_provider as dataset_provider
-
-from dataprovider.download_dataset import download_dataset
-from dataprovider.fasta_to_tfrecord_converter import fasta_to_tfrecord
+from dataprovider.utils.download_dataset import download_dataset
 from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGEncoder
 
 
