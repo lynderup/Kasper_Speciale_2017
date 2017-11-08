@@ -1,4 +1,3 @@
-import dataprovider.dataset_provider as dataset_provider
 import dataprovider.mappings as mappings
 
 observables = ['A', 'C', 'E', 'D', 'G', 'F', 'I', 'H', 'K', 'M', 'L', 'N', 'Q', 'P', 'S', 'R', 'T', 'W', 'V', 'Y']

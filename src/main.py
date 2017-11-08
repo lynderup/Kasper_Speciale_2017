@@ -1,14 +1,11 @@
 import model.joint_model as joint_model
 import model.util as util
-
-from dataprovider.tmseg_dataset_provider import TMSEGDatasetProvider
-from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGDecoder
 from decoder.decode_and_print_step1 import decode_and_print_step1
+from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGDecoder
 
 if __name__ == '__main__':
     config = joint_model.ModelConfig()
-    dataprovider = TMSEGDatasetProvider(batch_size=config.batch_size)
-    m = joint_model.Model(dataprovider, config, "test/")
+    m = joint_model.Model(config, "test/")
 
     m.train()
     # predictions = m.inference()

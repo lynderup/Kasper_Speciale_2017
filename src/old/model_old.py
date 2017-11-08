@@ -1,10 +1,9 @@
 import math
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 import dataprovider.mappings as mappings
-import dataprovider.dataset_provider as dataset_provider
 
 
 def sequence_cross_entropy(labels, logits, sequence_lengths):
