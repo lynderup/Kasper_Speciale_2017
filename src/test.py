@@ -1,24 +1,24 @@
+import tensorflow as tf
 
-def read_fasta(filename):
+import dataprovider.dataprovider_step3 as dataprovider_step3
 
-    with open(filename, "r") as file:
-        file_parts = file.read().split(">")
-        file_parts.pop(0)
+dataprovider = dataprovider_step3.DataproviderStep3(10)
 
-        return file_parts
+handle, iterator = dataprovider.get_iterator()
+lengths, sequences, sequence_sup_data, structures_step1 = iterator.get_next()
 
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    sess.run(dataprovider.get_table_init_op())
 
-path = "datasets/tmseg/data/sets/"
-fasta_path = "unmasked_hval0/"
+    train_handle, _ = sess.run(dataprovider.get_train_iterator_handle())
+    train_feed = {handle: train_handle}
+    fetches = [lengths, sequences, sequence_sup_data, structures_step1]
+    lengths, sequences, sequence_sup_data, structures_step1 = sess.run(fetches=fetches, feed_dict=train_feed)
 
-opm_set1 = "opm_set1"
-opm_set2 = "opm_set2"
-opm_set3 = "opm_set3"
-opm_set4 = "opm_set4"
+    print(lengths)
+    print(sequences)
+    print(sequence_sup_data)
+    print(structures_step1)
 
-sets = [opm_set1, opm_set2, opm_set3, opm_set4]
-
-for set in sets:
-    parts = read_fasta(path + fasta_path + set + ".fasta")
-    print(len(parts))
 

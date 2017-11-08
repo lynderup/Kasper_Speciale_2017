@@ -13,7 +13,7 @@ def structure_to_step_targets(lengths, sequence, structure):
     return lengths, sequence, sequence_sup_data, step1_target
 
 
-def _parse_function(example_proto):
+def parse_function(example_proto):
     context_features = {
         "length": tf.FixedLenFeature([], dtype=tf.int64)
     }
@@ -53,7 +53,7 @@ class DataproviderStep1:
         paths = [self.dataset_path + filename + filename_suffix for filename in filenames]
 
         dataset = tf.contrib.data.TFRecordDataset(paths)
-        dataset = dataset.map(_parse_function)
+        dataset = dataset.map(parse_function)
         dataset = dataset.map(structure_to_step_targets)
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
