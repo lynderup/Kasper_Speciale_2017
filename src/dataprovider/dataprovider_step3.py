@@ -44,13 +44,45 @@ def find_helices(step1_target, length):
 
 
 def flat_map(length, sequence, sequence_sup_data, step1_target):
+    def lambda_from_offsets(start_offset, size_offset, target):
+        return lambda helix: (helix[1] + size_offset,
+                              tf.slice(sequence,
+                                       [helix[0] + start_offset],
+                                       [helix[1] + size_offset]),
+                              tf.slice(sequence_sup_data,
+                                       [helix[0] + start_offset, 0],
+                                       [helix[1] + size_offset, 3]),
+                              target)
+        # tf.slice(step1_target,
+        #          [helix[0] + start_offset],
+        #          [helix[1] + size_offset]))
+
     helix_list = find_helices(step1_target, length)
 
     dataset = tf.data.Dataset.from_tensor_slices(helix_list)
-    dataset_positive = dataset.map(lambda helix: (helix[1],
-                                                  tf.slice(sequence, [helix[0]], [helix[1]]),
-                                                  tf.slice(sequence_sup_data, [helix[0], 0], [helix[1], 3]),
-                                                  tf.slice(step1_target, [helix[0]], [helix[1]])))
+    no_shorter_than_6 = dataset.filter(lambda helix: tf.greater(helix[1], 6))
+    starting_after_6 = dataset.filter(lambda helix: tf.greater(helix[0], 6))
+    ending_before_6 = dataset.filter(lambda helix: tf.less(helix[0] + helix[1] + 6, length))
+
+    dataset_positive = dataset.map(lambda_from_offsets(start_offset=0, size_offset=0, target=mappings.MEMBRANE))
+    dataset_positive = dataset_positive.repeat(6)  # Compensating for more negative samples
+
+    dataset_negative = no_shorter_than_6.map(
+        lambda_from_offsets(start_offset=6, size_offset=-6, target=mappings.NONMEMBRANE))
+    dataset_negative = dataset_negative.concatenate(no_shorter_than_6.map(
+        lambda_from_offsets(start_offset=0, size_offset=-6, target=mappings.NONMEMBRANE)))
+
+    dataset_negative = dataset_negative.concatenate(starting_after_6.map(
+        lambda_from_offsets(start_offset=-6, size_offset=0, target=mappings.NONMEMBRANE)))
+    dataset_negative = dataset_negative.concatenate(starting_after_6.map(
+        lambda_from_offsets(start_offset=-6, size_offset=6, target=mappings.NONMEMBRANE)))
+
+    dataset_negative = dataset_negative.concatenate(ending_before_6.map(
+        lambda_from_offsets(start_offset=0, size_offset=6, target=mappings.NONMEMBRANE)))
+    dataset_negative = dataset_negative.concatenate(ending_before_6.map(
+        lambda_from_offsets(start_offset=6, size_offset=0, target=mappings.NONMEMBRANE)))
+
+    dataset = dataset_positive.concatenate(dataset_negative)
 
     return dataset
 
@@ -77,8 +109,8 @@ class DataproviderStep3:
         dataset = dataset.map(dataprovider_step1.structure_to_step_targets)
         dataset = dataset.flat_map(flat_map)
         # dataset = dataset.repeat(None)  # Infinite iterations
-        # dataset = dataset.shuffle(buffer_size=1000)
-        # dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], [None]))
+        dataset = dataset.shuffle(buffer_size=100)
+        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], []))
 
         return dataset
 

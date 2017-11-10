@@ -14,11 +14,12 @@ with tf.Session() as sess:
     train_handle, _ = sess.run(dataprovider.get_train_iterator_handle())
     train_feed = {handle: train_handle}
     fetches = [lengths, sequences, sequence_sup_data, structures_step1]
+
     lengths, sequences, sequence_sup_data, structures_step1 = sess.run(fetches=fetches, feed_dict=train_feed)
 
     print(lengths)
-    print(sequences)
-    print(sequence_sup_data)
+    # print(sequences)
+    # print(sequence_sup_data)
     print(structures_step1)
 
 
