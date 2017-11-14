@@ -4,6 +4,14 @@ import math
 
 import dataprovider.mappings as mappings
 
+def sequence_cross_entropy(labels, logits, sequence_lengths):
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
+    if sequence_lengths is not None:
+        loss_sum = tf.reduce_sum(cross_entropy, axis=0)
+        return tf.truediv(loss_sum, tf.cast(sequence_lengths, tf.float32))
+    else:
+        return tf.reduce_mean(cross_entropy, axis=0)
+
 
 def find_membranes_aux(batch_predictions):
     batch_membranes = []
@@ -88,7 +96,7 @@ def add_fully_connected_layer(input_tensor, input_size, output_size, name):
     return logits
 
 
-def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size):
+def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output=True):
     fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=num_units,
                                                 forget_bias=0,
                                                 cell_clip=None,
@@ -119,12 +127,15 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size):
         weight = tf.get_variable("kernel")
         tf.add_to_collection(tf.GraphKeys.WEIGHTS, weight)
 
-    output = tf.concat([fw_output, bw_output], axis=2)
+    if sequence_output:
+        output = tf.concat([fw_output, bw_output], axis=2)
+    else:
+        output = tf.concat([fw_state.c, bw_state.c], axis=1)
 
     return output
 
 
-def add_lstm_layer(input_tensor, lengths, num_units, batch_size):
+def add_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output=False):
 
     fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=num_units,
                                                 forget_bias=0,
@@ -145,4 +156,7 @@ def add_lstm_layer(input_tensor, lengths, num_units, batch_size):
         weight = tf.get_variable("kernel")
         tf.add_to_collection(tf.GraphKeys.WEIGHTS, weight)
 
-    return output
+    if sequence_output:
+        return output
+    else:
+        return state.c

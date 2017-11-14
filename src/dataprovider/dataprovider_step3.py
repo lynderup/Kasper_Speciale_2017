@@ -108,8 +108,8 @@ class DataproviderStep3:
         dataset = dataset.map(dataprovider_step1.parse_function)
         dataset = dataset.map(dataprovider_step1.structure_to_step_targets)
         dataset = dataset.flat_map(flat_map)
-        # dataset = dataset.repeat(None)  # Infinite iterations
-        dataset = dataset.shuffle(buffer_size=100)
+        dataset = dataset.repeat(None)  # Infinite iterations
+        dataset = dataset.shuffle(buffer_size=500)
         dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], []))
 
         return dataset

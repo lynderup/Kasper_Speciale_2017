@@ -6,17 +6,7 @@ import numpy as np
 import model.util as util
 
 
-def sequence_cross_entropy(labels, logits, sequence_lengths):
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
-    if sequence_lengths is not None:
-        loss_sum = tf.reduce_sum(cross_entropy, axis=0)
-        return tf.truediv(loss_sum, tf.cast(sequence_lengths, tf.float32))
-    else:
-        return tf.reduce_mean(cross_entropy, axis=0)
-
-
 class ModelStep1:
-
     def __init__(self, config, logdir, dataprovider, handle, lengths, sequences, sequence_sup_data, structures_step1):
 
         self.config = config
@@ -43,10 +33,9 @@ class ModelStep1:
 
         # Build training graph step1
         with tf.variable_scope("Training", reuse=None):
-
-            cross_entropy_loss_step1 = tf.reduce_mean(sequence_cross_entropy(labels=structures_step1,
-                                                                             logits=logits,
-                                                                             sequence_lengths=lengths))
+            cross_entropy_loss_step1 = tf.reduce_mean(util.sequence_cross_entropy(labels=structures_step1,
+                                                                                  logits=logits,
+                                                                                  sequence_lengths=lengths))
 
             learning_rate, loss_step1, train_step_step1 = self.build_training_graph(cross_entropy_loss_step1,
                                                                                     var_list=var_list_step1,
@@ -96,11 +85,10 @@ class ModelStep1:
         for weight in weights_list:
             l2_reg_loss += tf.nn.l2_loss(weight)
 
-        loss = cross_entropy_loss# + l2_reg_loss
+        loss = cross_entropy_loss  # + l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step
-
 
     def train(self, summary_writer):
 
@@ -166,7 +154,7 @@ class ModelStep1:
             fetches = [lengths, sequences, structures_step1, logits]
 
             for i in range(4):
-                _lengths, inputs, targets_step1, out = sess.run(fetches=fetches,feed_dict=test_feed)
+                _lengths, inputs, targets_step1, out = sess.run(fetches=fetches, feed_dict=test_feed)
 
                 # # Switch sequence dimension with batch dimension so it is batch-major
                 batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)

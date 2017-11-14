@@ -9,12 +9,12 @@ if __name__ == '__main__':
 
     m.train()
     # predictions = m.inference()
-    set_lengths, set_inputs, set_targets, set_predictions = m.inference()
-
-    corrected_predictions = util.numpy_step2(set_predictions)
-    predictions = zip(set_lengths, set_inputs, set_targets, set_predictions, corrected_predictions)
-
-    decoder = TMSEGDecoder()
-    decode_and_print_step1(predictions, decoder)
+    # set_lengths, set_inputs, set_targets, set_predictions = m.inference()
+    #
+    # corrected_predictions = util.numpy_step2(set_predictions)
+    # predictions = zip(set_lengths, set_inputs, set_targets, set_predictions, corrected_predictions)
+    #
+    # decoder = TMSEGDecoder()
+    # decode_and_print_step1(predictions, decoder)
 
 
