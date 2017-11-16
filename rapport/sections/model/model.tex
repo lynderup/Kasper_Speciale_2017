@@ -9,7 +9,30 @@
 
 % tegning af model!!
 
+%  Problem delt op i 4 steps som i tmseg
+% Kun 3 af stepsne er machine learning
+	% Første step assigner en sandsynlighed for hver klasse til hver position i sekvens
+		% Vi har gjort det med en lstm, fodret med den rå sekvens
+		% Første lag embeder sekvens data i et vector rum
+		% Andet lag er en bidirectionel lstm 
+		% Trejde og sidste lag er et softmax layer som giver en sansynligheds fordeling af de forskellige klasser
+		
+	% Andet step er at give hver position en klasse ud fra dens sandsynlighed 
+		% med forbehold for at helixer ikke må være for korte
+		% Måske tilføje et bias til nogle af klasserne
+		% Ikke machine learning men mere post processing af af første step
+		
+	% Trejde step er justering af enderne af helixerne
+	
+	% Fjerne step er finde en topologi af sekvens, 
+		% ie hvilken vej vender helixerne og hvilke dele er inden for membranen og hvilke er uden for
+
+
 \subsection{Implementation}
 % Hvorfor tensorflow, python
 % Hvad får vi fra tensorflow, hvilket arbejde har vi selv gjort
 % Hvor meget arbejde ligger der i de forskellige dele af model
+
+% Tensorflow giver selve machine learning bygge klodserne 
+% men vi har selv sat dem sammen til en model 
+% For og efter behandling af dataen har der også lagt meget arbejde i
