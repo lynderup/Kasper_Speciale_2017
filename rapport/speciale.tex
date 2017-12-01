@@ -17,15 +17,42 @@
 \section*{Abstract}
 
 \tableofcontents
+
+% Introducere trans membrane proteiner. hvordan er de representeret, en streng af amino syre
+% Forskellige dele af proteinerne har forskellige fordelinger af aminosyre. Dette kan benyttes af en computer
+% Introducere trans membrane protein helix prediction, et problem der muligvis kan løses med machine learning
 \input{sections/introduction/introduction}
+
+% Hvad har andre folk gjort med problemet, nævn nogle stykker og forklar hvad de har gjort
+% Slut af med tmseg og beskrev hvad de har gjort mere beskrivende.
+% Hvad har andre folk gjort med machine learning problemer baseret på sekvens data
 \input{sections/related_work/related_work}
+
+% Beskriv nn. brug nn's problemer til at indroducere rnn
+% Beskriv rnn. brug rnn's problemer til at indroducere lstm
+% Beskriv lstm
 \input{sections/theory/theory}
+
+% Hvordan har vi valgt at prøve at løse problemet.
+% Vi har delt problemet op i subproblemer ligesom tmseg
+% Vi har prøvet at bruge andre machine learning metoder
+% Største forskel er at vi har givet model "rå" data i stedet for feature extraction
+% Fordelen er at man ikke behøver at på forhånd finde ud af hvilke features er vigtig
+
+% Hvilke muligheder er der for at implementere modelen. forskellige ml libraries
+% Vi har valgt tensorflow
 \input{sections/model/model}
-\input{sections/implementation/implementation}
+
+% Beskriv alle experimenter vi har kørt
+\input{sections/experiments/experiments}
+
+% Sammenlign resultater mellem experimenterne og mellem andre modeller
+% Kan vi se noget interressant i hvordan weights ser ud? 
 \input{sections/evaluation/evaluation}
+
+
 \input{sections/conclusion/conclusion}
 
 \printbibliography
-
 
 \end{document}}
