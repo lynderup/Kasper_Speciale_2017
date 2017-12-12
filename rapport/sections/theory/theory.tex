@@ -1,27 +1,29 @@
-\section{Theory}\todo{Different name!}
+\section{Theory} %\todo{Different name!}
+% Beskriv nn. brug nn's problemer til at indroducere rnn
+% Beskriv rnn. brug rnn's problemer til at indroducere lstm
+% Beskriv lstm
+
 % Hvad er neural network, recurrent nn, lstm
-% \cite{rnnLTD} pointere problemer med rnn
-% \cite{lstm} introducere lstm som løsning til ovenfor
 % Tegning/diagram over de forskellige ting - husk at det skal være relevant og skarpt.
 
-\subsection{A neural network}
+\subsection{Neural Network}
 % et netværk af perceptrons
 	% hver perceptron laver en matematisk udregning.
 		% DEN MATEMATISKE UDREGNING
-		% feed forward networks bruges bl.a. til image-recognition
+		% feed forward networks bruges bl.a. til image-recognition	
+	
+\subsection{Recurrent Neural Network}
+% \cite{rnnLTD} pointere problemer med rnn
 
 % Recurrent neural network: keyword = recurrent
-	% kan ikke "huske", hvad der tidligere er set.
-	
+% kan ikke "huske", hvad der tidligere er set.
+
+
+\subsection{Long Short-Term Memory Network}
+% \cite{lstm} introducere lstm som løsning til ovenfor
+
 % lstm's:
-	% Indeholder en CellState = LONG short-term memory
-	% Det er stadig bare en matematisk beregning
-		% DEN MATEMATISKE BEREGNING
-	% vi kan benytte det til at kigge på proteinstrenge! yearh!
-	
-	
-	
-% Cross entropy, som er brugt som loss funktion, ser ikke forskel på vigtigheden af klasserne
-% og cross entropy af en hel sekvens er gennemsnittet af cross entropy på hver position. 
-% Der er mange flere ikke helix end der er helix, dette kan give et bias til ikke helix
-		
+% Indeholder en CellState = LONG short-term memory
+% Det er stadig bare en matematisk beregning
+% DEN MATEMATISKE BEREGNING
+% vi kan benytte det til at kigge på proteinstrenge! yearh!
