@@ -7,10 +7,45 @@
 % Tegning/diagram over de forskellige ting - husk at det skal være relevant og skarpt.
 
 \subsection{Neural Network}
-% et netværk af perceptrons
-	% hver perceptron laver en matematisk udregning.
-		% DEN MATEMATISKE UDREGNING
-		% feed forward networks bruges bl.a. til image-recognition	
+% feed forward networks bruges bl.a. til image-recognition	
+		
+An \gls{ann} is a function that maps an input vector to an output vector. 
+It is consisting of layers interacting in some way. A typical \gls{ann} is the \gls{mlp}.
+It consists of multiple layers were each layer uses the last layer's output as input.
+The combutation that each layer does is multiplying it's input with a weight, adds a bias and applies 
+some non-linear activation function. As a function, a \gls{mlp} can be written as:
+
+\begin{align*}
+	MLP(x) &= MLP_L(x) \\
+	MLP_l(x) &= f(W_l * MLP_{l-1} + b_l) \\
+	MLP_0(x) &= x
+\end{align*}
+
+where $w_l$ is a weight matrix, $b_l$ is a bias vector and $L$ is the number of layers after the 
+input layer, if $L=2$ it is a shallow network with only one hidden layer and if greater it is a deep network
+with multiple hidden layers.
+
+The \gls{mlp} is multiplying the input by some weight matrix that cannot change dimensions from input to 
+input, it therefore requires that the input have some fixed length. This can give difficulties with 
+problems where instances is sequences of different lengths. Different techniques, each with it's own 
+shortcomings, can be used to apply \glspl{mlp} in such areas. 
+Two typical ways to do this is with a sliding window or with some sort of feature extraction or 
+a combination of the two. If the wanted output for the sequence is fixed length, like a classification, 
+% TODO like in tmseg step3, "is the seqment a tmh or not
+one can transform the input sequence to some fixed length by extracting the most important information
+from it. A problem with this is that some information has to be discarded and it is not always 
+obvious to see which features is the important ones, this usually require export knowledge in the
+field from with the problem originates. 
+If the wanted ouput is on the other hand a sequence, a sliding window can be used. 
+This is done by taking a fixed length segment of the sequence and using that as input to compute 
+a fixed length segment of the output and then moving the window by some amount in the sequence and compute 
+a new segment of the output, this is then repeated until the window has sled through the whole sequence.
+An advantage with this technique is no information is thrown away, but if some part of the output is 
+dependent on different parts of the input, it can be hard to chose a window length that 
+encapsulate all part of the input that it depends on, this can be remedied by augmenting 
+the window with features extracted from the whole sequence, but this involve the same problems 
+from before.
+
 	
 \subsection{Recurrent Neural Network}
 % \cite{rnnLTD} pointere problemer med rnn
