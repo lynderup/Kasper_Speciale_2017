@@ -14,7 +14,26 @@
 % Hvilke modeller eksisterer allerede og bliver brugt pt. 
 
 \subsubsection{TMSEG}
+In TMSEG\cite{tmseg} they divide the problem into four sub problems, called steps. 
+Most notable is the separation of the prediction of the \glspl{tmh} and the inside/outside topology. 
 
+In the first step they assigns a probability distribution of \gls{tmh}, signal peptide and non-transmembrane 
+to each aminoacid. To do this they used a \gls{rf} with a sliding window. 
+
+Step 2 is a filtering of the probability scores from last step. This is done by first smoothing the scores 
+by assigning each aminoacid the median value in a window. After this each aminoacid is assigned to 
+one of the classes based on the score with a empirically determined penalty applied to each class.
+They also removes predicted \gls{tmh} if it is too short.
+
+In the third step they use an \gls{ann} to correct the predicted \glspl{tmh}. This is done by extracting a 
+number of features from the segment where the predicted \gls{tmh} is and a couple of segments moved and 
+resized a little, the probability for each of these segments is a \gls{tmh} is then computed from the features
+and the segment with the highest probability is the corrected prediction. This step also splits 
+\glspl{tmh} if the split gives higher probabilities. 
+
+In the last step the inside/outside topology is predicted by a \gls{rf}. They use segments from around 
+the start and end of predicted \glspl{tmh}, then they extracts features from the segments and predict which 
+side is inside and which is outside.
 
 \subsection{Long Short-Term Memory Network}
 %Find nogle artikler der laver noget nice med lstm
