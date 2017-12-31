@@ -36,10 +36,37 @@
 		% ie hvilken vej vender helixerne og hvilke dele er inden for membranen og hvilke er uden for
 
 In many \gls{ann} based models it is very hard to ensure some syntax rules for the output. If the output 
-classes was \gls{tmh}, inside and outside, then it should not be possible for a output sequence to contain 
+classes was \emph{\gls{tmh}}, \emph{inside} and \emph{outside}, then it should not be possible for a output sequence to contain 
 adjacent positions with one being inside and the other being outside or both ends of a \gls{tmh} to be on the 
-same side, but these rules cannot be ensured. If the problem is devided in sub problems in such a way that 
-the rules is in the way the problem is divided. 
+same side, but these rules cannot be ensured. If the problem is divided in sub problems in such a way that 
+the rules is in the way the problem is divided. This is what was done in TMSEG\cite{tmseg}, they divided 
+the problem such that each sub-problem is more focused on one thing and most of the desired structure is 
+enforced in the design of the problem. They still do some post processing to constrain the output in certain ways, 
+signal peptides is only in the beginning and \glspl{tmh} is not too short, but this is much simpler than 
+somehow constraining the order the classes is allowed to appear in. The other advantages of the sub-division 
+is the ability of each sub-problem to focus on one thing. In TMSEG the problem was divided into four steps
+where the focus of the first step was to identify regions of the protein with \glspl{tmh} or signal peptides.
+The second step's focus was post processing of the first step, to remove noise and constrain the output.
+The focus of the third step was to adjust the endpoints of the \glspl{tmh} to give a more precise location.
+The fourth and final step's focus was to assign a topology to the protein. 
+
+To make this model I have chosen to use the same division of the problem as in TMSEG because of the 
+advantages listed above. I chosen to use different machine learning methods to examine the feasibility 
+of giving the model the raw data and letting it learn what is important and to look into which trade-offs
+there is to doing it this way instead of using expert knowledge about the problem to choosing and extracting 
+the important features. \glspl{lstm} is chosen as the main machine learning method because it is very suitable
+to use on raw sequence data and because of good results in a lot of different problems. 
+
+Ideally I would have looked at all steps and compared them individually with the corresponding step in TMSEG,
+but due to time constraint I have concentrated on the first three steps and mainly compared them together.
+
+\begin{figure}
+	\centering
+%	\includegraphics[width=\textwidth]{}
+	\caption{The layers for the model of step 1}
+	\label{fig:step1}
+\end{figure}
+
 
 \subsection{Machine Learning Libraries}
 
