@@ -67,8 +67,46 @@ but due to time constraint I have concentrated on the first three steps and main
 	\label{fig:step1}
 \end{figure}
 
+The model for step 1 consists of an embedding layer with a bidirectional \gls{lstm} on top followed by a
+forward \gls{lstm} and a softmax layer on top to give a probability distribution of the output classes.
+An illustration of the model for step 1 can be seen in Figure \ref{fig:step1}.
+
+The embedding layer is a matrix that transform the input from discrete integers to dense vectors, 
+this serves two purposes. The first and most important purpose is to embed the discrete input values 
+into a continues vector space. The input is integers from 0 to 19 corresponding to the amino acids, but 
+these are discrete and have no concept of distance. By embedding them into a continues vector space 
+a meaning is assigned to distance and the matrix can be altered by the training of the network, 
+the idea is the network learns to embed similar amino acids to similar regions in the vector space
+and with multiple dimension, different dimension could represent different measures for similarity. 
+The measures for similarity is not necessarily something that makes sense to a human but just whatever 
+gives the best results. The second purpose is to project the dimensionality of the input to something else 
+to be able to chose the size of the next layer. This could be done by a projection layer but with an embedding 
+layer this is unnecessary. 
+
+After the embedding layer comes a bidirectional \gls{lstm}. This consists of two parallel \glspl{lstm} where 
+one is an ordinary forward \gls{lstm} and the other is a backward \gls{lstm} that starts at the end of the 
+input sequence and goes though it to the start. The output from the two \glspl{lstm} is then concatenated
+such that the total output is a sequence of element wise concatenated output corresponding to the same input.
+The reason for this layer to be bidirectional is that each element in the output now consists of information
+gathered from both before and after the element's position. 
+
+On top of the bidirectional \gls{lstm} is an ordinary forward \gls{lstm} to do some computation on the
+gathered information. This layer does not benefit from being bidirectional because it already have 
+information from both directions. It does however benefit from being a recurrent layer, not 
+because it can remember earlier input, but because it can remember earlier output and therefore have
+information about the number of consecutive output of the same class. This layer does not actually 
+output the classes, but a vector used to compute the probability distribution.
+
+The last layer is softmax layer. This is an ordinary non-recurrent fully-connected layer, same as in 
+a \gls{mlp}. This layer uses the softmax function as activation function to be able to output 
+a probability distribution of the output classes.
+ 
+\todo{Beskriv step 2}
+
+\todo{beskriv step 3}
 
 \subsection{Machine Learning Libraries}
+A lot of different machine learning libraries exists, that can make the implementation of the model easier.
 
 \subsection{Implementation}
 % Hvorfor tensorflow, python
