@@ -106,7 +106,20 @@ a probability distribution of the output classes.
 \todo{beskriv step 3}
 
 \subsection{Machine Learning Libraries}
-A lot of different machine learning libraries exists, that can make the implementation of the model easier.
+A lot of different machine learning libraries exists, like Tensorflow\cite{tensorflow}, Caffe\cite{caffe}, 
+Theano\cite{theano} and more. These can make the implementations of a machine learning model a lot easier 
+and faster. I have chosen to use Tensorflow mostly because I had prior knowledge and experience with it.
+
+With tensorflow you first define a computation graph for the model and then you run the graph.
+This has the advantages that the graph is just a data structure and therefore can be language and platform 
+independent, and the defining of the computation graph and the running of it can be separated to different 
+processes. The running can therefore be handled by a highly optimized backend and the defining can be done 
+by using an API in a different language.
+The library also adds a lot of modules that can be used together as blocks to form large parts of the 
+computation graph. Most standard components of machine learning models, like different layer types, 
+loss functions, training algorithms and even multiple different implementations of \gls{lstm} cells.
+This gives the ability to concentrate on non standard parts of the model that is associated to the 
+problem instance and not the type of machine learning used.
 
 \subsection{Implementation}
 % Hvorfor tensorflow, python
