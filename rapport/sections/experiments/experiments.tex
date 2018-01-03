@@ -16,8 +16,64 @@
 
 % Hvad forventer vi resultaterne vil være.
 
-\subsection{Dataset}
+All the weights and biases in the model gets initialized by random values and the training
+is done by mini-batch gradient descent, where a random batch of the samples is used to 
+calculate the gradient. The training can converge to different local minima with 
+different initial variables and order of batches.
+The trained model is therefore very sensitive to the initial assignment of 
+variables and the order the samples is used. It is therefore unlikely to get the same 
+result every time the model is trained and can have a very high variance. 
+To try to get an idea about the variance I will run each experiment multiple times.
 
-\subsection{Measurements}
+
+\subsection{Dataset}
+The dataset used to train and test the model is the TMP166\cite{tmseg} dataset used to 
+develop TMSEG. The dataset consists of four subsets with approximate the same distribution 
+of different length of proteins. The fourth subset was omitted from the training and only 
+used to test the final model on. This was done to be sure that the model was not overfitted
+on the test set and that the model was generalizing to new data. 
 
 \subsection{Training}
+\glspl{lstm} is fairly slow in terms of time, both to inference and especially to train.
+This is because \gls{lstm} layers needs lots of computations in comparison with ordinary 
+fully connected layers and most \glspl{ann} is already slow in comparison with many 
+other types of machine learning.
+\todo{maybe some timing test and comparison with HMM}
+
+Proper grid search of hyper-parameters is a very long process because the time it takes
+scales exponential in the number of different hyper-parameters and the model has a lot 
+of them and together with the fairly long training time is the whole process very slow.
+I have therefore chosen not to do a complete grid search.
+\todo{beskriv hyper-parameter valgs process}
+
+
+\subsection{Measurements}
+To evaluate the model some measure for the performance of the model have to be chosen.
+I have chosen three different types of measurements that have three different purposes.
+The loss function used in training of step 1 assigns a loss to each position with a 
+wrong predicted class and the optimiser then tries to minimize this loss. 
+Since the loss is calculated from each position, it seems apparent to also use a 
+position based measurement. Especially to measure the performance of step 1.
+This type of measurement does not see a \gls{tmh} as a single thing and can therefore
+not say anything about the number of \glspl{tmh}. It is therefore also interesting 
+to have a measure for this. I have used two different types of measurements to do this, 
+both of them counts a consecutive sequence of positions classified as \gls{tmh} as a single
+prediction. The purpose of step 1 was to identify regions with \glspl{tmh}.
+The second measurement type's purpose is therefore to measure if a prediction of a 
+\gls{tmh} is in the right region, this is done by finding the length of the overlap 
+between the predicted \gls{tmh} and the true \gls{tmh}, the length is then compared 
+to the longest of the two \gls{tmh}. The predicted \gls{tmh} is counted as a correct prediction
+if the ratio is larger than a certain value. I have done this with different values 
+to see how precise the predicted regions is. 
+The last measurement type is intended to measure the usefulness of step 3. The purpose of
+this step was to adjust the endpoints of predicted \glspl{tmh}, this measurement 
+therefore looks at endpoints and counts a predicted \gls{tmh} as correct if both endpoints 
+is a certain number of positions of the true endpoints. This is again done with 
+different values for the allowed distance to the true endpoints. 
+These two measurement types is derived from one of the measurement they use in TMSEG,
+which is a combination of the two where the overlap have to be at least 50\% and the 
+endpoints have to be within 5 positions of the true endpoints for a prediction to be counted
+as correct. I have also used this measurement to be able to compare to the result they get 
+there. 
+
+
