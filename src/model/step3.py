@@ -14,9 +14,6 @@ class ModelStep3:
         self.dataprovider = dataprovider
         self.handle = handle
 
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-
         self.lengths = lengths
         self.sequences = sequences
         self.sequence_sup_data = sequence_sup_data

@@ -4,6 +4,7 @@ import math
 
 import dataprovider.mappings as mappings
 
+
 def sequence_cross_entropy(labels, logits, sequence_lengths):
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
     if sequence_lengths is not None:
@@ -135,7 +136,7 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size, s
     return output
 
 
-def add_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output=False):
+def add_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output=True):
 
     fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=num_units,
                                                 forget_bias=0,
