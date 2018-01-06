@@ -88,11 +88,8 @@ def flat_map(length, sequence, sequence_sup_data, step1_target):
 
 
 class DataproviderStep3:
-    def __init__(self, batch_size):
-        self.dataset_path = "datasets/tmseg/data/sets/tfrecords/"
-
-        trainset = ["opm_set1", "opm_set2"]
-        validationset = ["opm_set3"]
+    def __init__(self, batch_size, path, trainset, validationset):
+        self.dataset_path = path
 
         self.training_dataset = self.get_dataset(batch_size, trainset)
         self.validation_dataset = self.get_dataset(batch_size, validationset)

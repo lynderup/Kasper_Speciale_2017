@@ -1,5 +1,5 @@
 import evaluaters.compare_prediction as compare_prediction
-
+import numpy as np
 
 class Statistics:
 
@@ -18,17 +18,35 @@ class Statistics:
         for evaluator_name, evaluator in self.evaluators:
             print(evaluator_name)
 
-            for model_name, model in self.models:
+            for model_name, runs in self.models:
 
                 print(model_name)
-                precision, recall = compare_prediction.compare_predictions(model,
-                                                                           evaluator)
-                print("Precision: %.4f Recall: %.4f" % (precision, recall))
+
+                precisions = []
+                recalls = []
+
+                for run in runs:
+                    precision, recall = compare_prediction.compare_predictions(run, evaluator)
+                    precisions.append(precision * 100)
+                    recalls.append(recall * 100)
+
+                precision_mean = np.mean(precisions)
+                precision_var = np.var(precisions)
+
+                recall_mean = np.mean(recalls)
+                recall_var = np.var(recalls)
+
+                print("Precision: %.4f %.4f Recall: %.4f %.4f" % (precision_mean,
+                                                                  precision_var,
+                                                                  recall_mean,
+                                                                  recall_var))
+                print(precisions)
+                print(recalls)
 
     # Assumes predictions in same order in all added models
     def print_predictions(self):
 
-        models = [model for _, model in self.models]
+        models = [model[0] for _, model in self.models]
         if len(models) > 0:
             for i, (name, sequence, targets, _) in enumerate(models[0]):
                 print(name)

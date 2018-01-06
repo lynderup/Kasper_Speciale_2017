@@ -22,16 +22,11 @@ def parse_function(example_proto):
 
 
 class DataproviderStep1:
-    def __init__(self, batch_size):
+    def __init__(self, batch_size, path, trainset, validationset, testset):
         self.structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
         self.sequence_to_sup_data_dict_table = mappings.dict_to_embedding_tensor(mappings.sequence_to_sup_data_dict)
 
-        self.dataset_path = "datasets/tmseg/data/sets/tfrecords/"
-
-        trainset = ["opm_set1", "opm_set2"]
-        validationset = ["opm_set3"]
-        # testset = ["opm_set4"]
-        testset = ["opm_set3"] # To not overfit hyperparameters on testset
+        self.dataset_path = path
 
         self.training_dataset = self.get_dataset(batch_size, trainset, repeat_shuffle=True)
         self.validation_dataset = self.get_dataset(batch_size, validationset, repeat_shuffle=True)

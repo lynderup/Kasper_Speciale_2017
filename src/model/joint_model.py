@@ -6,8 +6,9 @@ import tensorflow as tf
 
 import model.step1 as step1
 import model.step3 as step3
-import dataprovider.dataprovider_step1
-import dataprovider.dataprovider_step3
+import dataprovider.joint_dataprovider as joint_dataprovider
+# import dataprovider.dataprovider_step1
+# import dataprovider.dataprovider_step3
 
 ModelConfig = namedtuple("ModelConfig", ["step1_config", "step3_config"])
 StepConfig = namedtuple("StepConfig", ["batch_size",
@@ -79,19 +80,21 @@ def make_logdir(logdir, step_config):
 
 
 class Model:
-    def __init__(self, logdir, config=default_config, should_step1=True, should_step3=True):
+    def __init__(self, logdir, config=default_config, dataprovider=None, should_step1=True, should_step3=True):
         print("Building graph")
         start = time.time()
 
         tf.reset_default_graph()
+
+        if dataprovider is None:
+            dataprovider = joint_dataprovider.Dataprovider()
 
         if should_step1:
             self.step1_logdir = make_logdir(logdir + "step1/", config.step1_config)
 
             # Data input
             with tf.variable_scope("Input", reuse=None):
-                dataprovider_step1 = dataprovider.dataprovider_step1.DataproviderStep1(batch_size=
-                                                                                       config.step1_config.batch_size)
+                dataprovider_step1 = dataprovider.get_step1_dataprovider(batch_size=config.step1_config.batch_size)
                 step1_data = self.build_data_input_step1(dataprovider_step1)
 
             with tf.variable_scope("Step1", reuse=None):
@@ -105,8 +108,7 @@ class Model:
 
             # Data input
             with tf.variable_scope("Input", reuse=None):
-                dataprovider_step3 = dataprovider.dataprovider_step3.DataproviderStep3(batch_size=
-                                                                                       config.step3_config.batch_size)
+                dataprovider_step3 = dataprovider.get_step3_dataprovider(batch_size=config.step3_config.batch_size)
                 step3_data = self.build_data_input_step3(dataprovider_step3)
 
             with tf.variable_scope("Step3", reuse=None):
