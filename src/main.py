@@ -1,11 +1,11 @@
 import model.joint_model as joint_model
 import model.util as util
 import decoder.decoder as decoder
+import model.hyper_params_search as hyper_params_search
 
 from evaluaters.statistics import Statistics
 
-if __name__ == '__main__':
-
+def test():
     statistics = Statistics()
 
     m = joint_model.Model(logdir="test/", should_step3=False)
@@ -20,8 +20,12 @@ if __name__ == '__main__':
     step2_predictions = zip(set_lengths, set_inputs, set_targets, corrected_predictions)
     statistics.add_model(("Step2", decoder.decode_step123(step2_predictions)))
 
+    statistics.print_predictions()
     statistics.print_statistics()
 
+if __name__ == '__main__':
+    # test()
+    hyper_params_search.do_hyper_params_search()
 
 
 

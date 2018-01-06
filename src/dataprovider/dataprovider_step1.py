@@ -1,17 +1,6 @@
 import tensorflow as tf
 import dataprovider.mappings as mappings
 
-structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
-sequence_to_sup_data_dict_table = mappings.dict_to_embedding_tensor(mappings.sequence_to_sup_data_dict)
-
-
-def structure_to_step_targets(lengths, sequence, structure):
-    step1_target = structure_to_step1_target_table.lookup(structure)
-
-    sequence_sup_data = tf.nn.embedding_lookup(sequence_to_sup_data_dict_table, sequence)
-
-    return lengths, sequence, sequence_sup_data, step1_target
-
 
 def parse_function(example_proto):
     context_features = {
@@ -34,6 +23,9 @@ def parse_function(example_proto):
 
 class DataproviderStep1:
     def __init__(self, batch_size):
+        self.structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
+        self.sequence_to_sup_data_dict_table = mappings.dict_to_embedding_tensor(mappings.sequence_to_sup_data_dict)
+
         self.dataset_path = "datasets/tmseg/data/sets/tfrecords/"
 
         trainset = ["opm_set1", "opm_set2"]
@@ -46,15 +38,22 @@ class DataproviderStep1:
         self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
-        return structure_to_step1_target_table.init
+        return self.structure_to_step1_target_table.init
+
+    def structure_to_step_targets(self, lengths, sequence, structure):
+        step1_target = self.structure_to_step1_target_table.lookup(structure)
+
+        sequence_sup_data = tf.nn.embedding_lookup(self.sequence_to_sup_data_dict_table, sequence)
+
+        return lengths, sequence, sequence_sup_data, step1_target
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
         filename_suffix = ".tfrecord"
         paths = [self.dataset_path + filename + filename_suffix for filename in filenames]
 
-        dataset = tf.contrib.data.TFRecordDataset(paths)
+        dataset = tf.data.TFRecordDataset(paths)
         dataset = dataset.map(parse_function)
-        dataset = dataset.map(structure_to_step_targets)
+        dataset = dataset.map(self.structure_to_step_targets)
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=1000)

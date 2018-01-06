@@ -111,7 +111,7 @@ class ModelStep3:
             merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
 
             for i in range(self.config.train_steps):
-                print(i)
+                print(i, end=', ', flush=True)
 
                 fetches = [merged_sum,
                            self.train_step_step3]

@@ -68,11 +68,11 @@ def make_logdir(logdir, step_config):
     run_logdir = logdir + name + "_"
 
     run_number = 0
-    suggested_run_name = run_logdir + str(run_number)
+    suggested_run_name = run_logdir + str(run_number) + "/"
 
     while os.path.exists(suggested_run_name):
         run_number += 1
-        suggested_run_name = run_logdir + str(run_number)
+        suggested_run_name = run_logdir + str(run_number) + "/"
 
     os.mkdir(suggested_run_name)
     return suggested_run_name
@@ -82,6 +82,8 @@ class Model:
     def __init__(self, logdir, config=default_config, should_step1=True, should_step3=True):
         print("Building graph")
         start = time.time()
+
+        tf.reset_default_graph()
 
         if should_step1:
             self.step1_logdir = make_logdir(logdir + "step1/", config.step1_config)

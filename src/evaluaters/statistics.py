@@ -25,3 +25,19 @@ class Statistics:
                                                                            evaluator)
                 print("Precision: %.4f Recall: %.4f" % (precision, recall))
 
+    # Assumes predictions in same order in all added models
+    def print_predictions(self):
+
+        models = [model for _, model in self.models]
+        if len(models) > 0:
+            for i, (name, sequence, targets, _) in enumerate(models[0]):
+                print(name)
+                print(sequence)
+                print(targets)
+
+                for model in models:
+                    print(model[i][3])
+
+
+
+

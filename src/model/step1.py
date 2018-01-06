@@ -111,7 +111,9 @@ class ModelStep1:
             merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
 
             for i in range(self.config.train_steps):
-                print(i)
+                print(i, end=', ', flush=True)
+                if i > 0 and i % 50 == 0:
+                    print()
 
                 fetches = [merged_sum,
                            self.train_step_step1]
@@ -123,6 +125,7 @@ class ModelStep1:
                     summary_writer.add_summary(val_loss, i)
                     summary_writer.add_summary(summary, i)
 
+            print()
             self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
 
     def inference(self):
