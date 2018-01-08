@@ -6,6 +6,17 @@ import model.cross_validation as cross_validation
 
 from evaluaters.statistics import Statistics
 
+config = joint_model.StepConfig(batch_size=10,
+                                num_input_classes=20,
+                                num_output_classes=2,
+                                starting_learning_rate=0.01,
+                                decay_steps=10,
+                                decay_rate=0.99,
+                                num_units=50,  # 50
+                                train_steps=1000)  # 1000
+
+model_config = joint_model.default_config._replace(step1_config=config)
+
 def test():
     statistics = Statistics()
 
@@ -14,7 +25,7 @@ def test():
     # m.train()
     # set_lengths, set_inputs, set_targets, set_predictions = m.inference()
 
-    runs = cross_validation.do_3_fold_cross_validation()
+    runs = cross_validation.do_3_fold_cross_validation(config=model_config)
 
     step1_predictions = []
     step2_predictions = []

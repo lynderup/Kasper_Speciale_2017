@@ -5,6 +5,41 @@
 % the results with nice grafic representation
 % sub-conclusion on each little test where we look at the results in TMSEG
 
+\begin{table}
+	\centering 
+	\begin{tabular}{l|c|c|c|c|c|c|c|c} 
+		Model & \multicolumn{2}{|c}{10\%}& \multicolumn{2}{|c}{25\%}& \multicolumn{2}{|c}{50\%}& \multicolumn{2}{|c}{75\%}\\ 
+		& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
+		Step1 & $ 82 \pm 2 $ & $ 90 \pm 2 $ & $ 80 \pm 2 $ & $ 89 \pm 1 $ & $ 72 \pm 5 $ & $ 80 \pm 6 $ & $ 50 \pm 2 $ & $ 56 \pm 3 $ \\ 
+		Step2 & $ 90 \pm 2 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 1 $ & $ 80 \pm 6 $ & $ 82 \pm 5 $ & $ 55 \pm 4 $ & $ 57 \pm 4 $ \\ 
+	\end{tabular}
+	\caption{Overlap}
+	\label{tab:overlap}
+\end{table}
+
+\begin{table}
+	\centering 
+	\begin{tabular}{l|c|c|c|c|c|c|c|c} 
+		Model & \multicolumn{2}{|c}{Below 10}& \multicolumn{2}{|c}{Below 5}& \multicolumn{2}{|c}{Below 2}& \multicolumn{2}{|c}{Equal 0}\\ 
+		& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
+		Step1 & $ 72 \pm 2 $ & $ 79 \pm 2 $ & $ 53 \pm 4 $ & $ 59 \pm 4 $ & $ 21 \pm 2 $ & $ 23 \pm 1 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
+		Step2 & $ 79 \pm 3 $ & $ 81 \pm 1 $ & $ 58 \pm 6 $ & $ 59 \pm 5 $ & $ 23 \pm 2 $ & $ 24 \pm 1 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
+	\end{tabular}
+	\caption{Endpoint}
+	\label{tab:endpoint}
+\end{table}
+
+\begin{table}
+	\centering 
+	\begin{tabular}{l|c|c} 
+		Model & Precision & Recall \\ \hline 
+		Step1 & $52.2 \pm 7.2$ & $58.6 \pm 6.7$ \\ 
+		Step2 & $60.8 \pm 8.2$ & $60.9 \pm 7.1$ \\ 
+	\end{tabular}
+    \caption{Precision and recall for 50\% overlap and endpoints difference below 5.}
+	\label{tab:pr25}
+\end{table}
+
 \subsection{Discussion}
 % What have we achieved? 
 % Further work for it to be even better. 

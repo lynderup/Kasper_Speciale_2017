@@ -6,6 +6,17 @@ def overlap_over_25_percent(start_diff, end_diff, overlap, longest):
     return overlap * 4 >= longest
 
 
+def overlap_over_x(x):
+    ratio = 100.0 / x
+
+    return lambda start_diff, end_diff, overlap, longest: overlap * ratio >= longest
+
+
+def endpoint_diff_below_x(x):
+
+    return lambda start_diff, end_diff, overlap, longest: start_diff <= x and end_diff <= x
+
+
 def find_tmh(annotation):
 
     tmh = []
