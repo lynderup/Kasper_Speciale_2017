@@ -44,8 +44,15 @@ other types of machine learning.
 Proper grid search of hyper-parameters is a very long process because the time it takes
 scales exponential in the number of different hyper-parameters and the model has a lot 
 of them and together with the fairly long training time is the whole process very slow.
-I have therefore chosen not to do a complete grid search.
-\todo{beskriv hyper-parameter valgs process}
+I have therefore chosen not to do a complete grid search,
+but a more linear approach where it goes through the hyper-parameters one at a time and
+tries different values and chooses the one that gives the best average precision and recall.
+It then goes through the hyper-parameters again to see if different values a better in 
+combination with the values chosen later in the process.
+The standard deviation was some times bigger than the difference of to values for some 
+of the parameters, therefore was each value used in a 3-fold cross-validation on the 
+three first subsets, this way it was more consistent which value was the best for a 
+given hyper-parameter.
 
 
 \subsection{Measurements}
