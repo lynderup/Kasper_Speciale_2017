@@ -23,7 +23,8 @@ different initial variables and order of batches.
 The trained model is therefore very sensitive to the initial assignment of 
 variables and the order the samples is used. It is therefore unlikely to get the same 
 result every time the model is trained and can have a very high variance. 
-To try to get an idea about the variance I will run each experiment multiple times.
+Each experiment was therefore run ten times and the mean was used as result with 
+the standard deviation of these runs as error rates.
 
 
 \subsection{Dataset}
@@ -43,11 +44,44 @@ other types of machine learning.
 Proper grid search of hyper-parameters is a very long process because the time it takes
 scales exponential in the number of different hyper-parameters and the model has a lot 
 of them and together with the fairly long training time is the whole process very slow.
-I have therefore chosen not to do a complete grid search.
-\todo{beskriv hyper-parameter valgs process}
+I have therefore chosen not to do a complete grid search,
+but a more linear approach where it goes through the hyper-parameters one at a time and
+tries different values and chooses the one that gives the best average precision and recall.
+It then goes through the hyper-parameters again to see if different values a better in 
+combination with the values chosen later in the process.
+The standard deviation was some times bigger than the difference of to values for some 
+of the parameters, therefore was each value used in a 3-fold cross-validation on the 
+three first subsets, this way it was more consistent which value was the best for a 
+given hyper-parameter.
 
 
 \subsection{Measurements}
+
+\begin{figure}
+	\centering
+	
+	\begin{tikzpicture}[]
+	\draw[step=0.5cm,very thin,color=lightgray] (0,-1) grid (8,3);
+	
+	\draw[] (0.5,1.5) rectangle (6,2);
+	\node at (-0,1.5) [anchor=south east] {True TMH:};
+	\draw[<->] (6,1.75) -- (7.5,1.75) node[pos=0.5, below]{j};
+	\draw[<->] (0.5,2.25) -- (6,2.25) node[pos=0.5, above]{a};
+	
+	\draw[] (2,0) rectangle (7.5,0.5);
+	\node at (-0,0) [anchor=south east] {Predicted TMH:};
+	\draw[<->] (0.5,0.25) -- (2,0.25) node[pos=0.5, below]{i};
+	\draw[<->] (2,-0.25) -- (7.5,-0.25) node[pos=0.5, below]{b};
+	
+	\draw[<->] (2,1) -- (6,1) node[pos=0.5, below]{o};
+	\end{tikzpicture}
+	
+	\caption{Illustrations of used measurements in comparison of \glspl{tmh}. a is the length of true \gls{tmh},
+		b is the length of the predicted \gls{tmh}, i is the difference in the start position, j is the difference
+		in the end posetion and o is the length of the overlap.}
+	\label{fig:thm_measurements}
+\end{figure}
+
 To evaluate the model some measure for the performance of the model have to be chosen.
 I have chosen three different types of measurements that have three different purposes.
 The loss function used in training of step 1 assigns a loss to each position with a 
@@ -61,19 +95,46 @@ both of them counts a consecutive sequence of positions classified as \gls{tmh} 
 prediction. The purpose of step 1 was to identify regions with \glspl{tmh}.
 The second measurement type's purpose is therefore to measure if a prediction of a 
 \gls{tmh} is in the right region, this is done by finding the length of the overlap 
-between the predicted \gls{tmh} and the true \gls{tmh}, the length is then compared 
+between the predicted \gls{tmh} and the true \gls{tmh}, denoted as $o$ in Figure 
+\ref{fig:thm_measurements}, the length is then compared 
 to the longest of the two \gls{tmh}. The predicted \gls{tmh} is counted as a correct prediction
-if the ratio is larger than a certain value. I have done this with different values 
-to see how precise the predicted regions is. 
-The last measurement type is intended to measure the usefulness of step 3. The purpose of
+if the ratio is larger than a certain value. This condition as an equation becomes:
+
+\begin{equation}
+	\frac{o}{\max(a, b)} \geq x
+\end{equation}
+
+Where $o$ is the length of the overlap, $a$ and $b$ is the length of the true \gls{tmh}
+and the predicted \gls{tmh} respectively and $x$ is the minimum overlap ratio.
+I have done this with different values to see how precise the predicted regions is. 
+
+The last measurement type is intended to measure step 3. The purpose of
 this step was to adjust the endpoints of predicted \glspl{tmh}, this measurement 
 therefore looks at endpoints and counts a predicted \gls{tmh} as correct if both endpoints 
-is a certain number of positions of the true endpoints. This is again done with 
-different values for the allowed distance to the true endpoints. 
+is within a certain number of positions of the true endpoints. 
+As an equation this becomes:
+
+\begin{equation}
+	i \leq y \wedge j \leq y
+\end{equation}
+
+Where $i$ is the length between the start of the true \gls{tmh} and the predicted \gls{tmh},
+$j$ is the length between the end of the two \gls{tmh} and $y$ is the maximum length these
+differences can be. This is again done with 
+different values for the allowed difference of endpoints. 
+
 These two measurement types is derived from one of the measurement they use in TMSEG,
 which is a combination of the two where the overlap have to be at least 50\% and the 
 endpoints have to be within 5 positions of the true endpoints for a prediction to be counted
 as correct. I have also used this measurement to be able to compare to the result they get 
 there. 
 
+For each condition for when a predicted \gls{tmh} is correct, precision and recall is calculated.
+Precision is the percentages of the predicted \glspl{tmh} that is correct and recall is the 
+percentages of true \glspl{tmh} that was correct predicted. Calculated the same way as in TMSEG:
+
+\begin{align*}
+	\text{Precision} &= \frac{\text{\# of correctly predicted TMHs}}{\text{\# of predicted TMHs}} * 100 \\
+	\text{Recall} &= \frac{\text{\# of correctly predicted TMHs}}{\text{\# of true TMHs}} * 100
+\end{align*}
 
