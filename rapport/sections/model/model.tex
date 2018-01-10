@@ -66,7 +66,9 @@ but due to time constraint I have concentrated on the first three steps and main
 	\caption{The layers for the model of step 1}
 	\label{fig:step1}
 \end{figure}
+\subsection{Layout of Model}
 
+\subsubsection{Step 1}
 The model for step 1 consists of an embedding layer with a bidirectional \gls{lstm} on top followed by a
 forward \gls{lstm} and a softmax layer on top to give a probability distribution of the output classes.
 An illustration of the model for step 1 can be seen in Figure \ref{fig:step1}.
@@ -101,9 +103,9 @@ The last layer is softmax layer. This is an ordinary non-recurrent fully-connect
 a \gls{mlp}. This layer uses the softmax function as activation function to be able to output 
 a probability distribution of the output classes.
  
-\todo{Beskriv step 2}
+\subsubsection{Step 2}
 
-\todo{beskriv step 3}
+\subsubsection{Step 3}
 
 \subsection{Machine Learning Libraries}
 A lot of different machine learning libraries exists, like Tensorflow\cite{tensorflow}, Caffe\cite{caffe}, 
