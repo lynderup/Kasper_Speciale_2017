@@ -5,3 +5,31 @@
 
 % motivation: Inden for andre fields er nogle af de bedste løsninger med LSTMs. Vi vil se om man kan bruge LSTMs til TMprediction.
 % inspiration: TMSEG
+
+\glspl{tmp} is a kind of proteins that crosses the membrane, they have an important
+role in many living organisms \cite{} and different areas is interested in theirs structure,
+among other as drug targets \cite{}, but it can be expensive to experimental determine 
+their structure, and it could therefore be beneficial if it was possible to determine
+the structure from the protein's composition. This is the problem of \gls{tmp} prediction.
+Instances in this problem comes as a string of characters corresponding to the sequence 
+of amino acids the protein consists of. The goal is then to predict the structure 
+from this sequence. The structure consists of three parts, the parts of the protein 
+that goes through the membrane, called \glspl{tmh}, the part that is inside, and the part 
+that is outside. The structure is represented as a string the same length as the 
+amino acid sequence and consists of different characters corresponding to which part
+of the structure, the amino acid at the same position belong to.
+This is possible because the distribution of amino acids is different in the different 
+parts. This distribution or pattern can be approximated by training a machine learning 
+model. The training is done by showing the model examples of \glspl{tmp} with known
+structure.
+
+Here I will build a machine learning model to try to solve this problem. The model
+will be based on the model TMSEG \cite{tmseg}, it will use different machine learning
+methods but will follow TMSEG in both how the problem is approached and how the result
+is measured. Most traditional machine learning approaches needs a lot of knowledge 
+about the problem to be able to extract the relevant information from the input data.
+Here i will examine the possibility of skipping this step by feeding the raw input 
+into the model, this I have done by basing the model on a type of \glspl{rnn} called 
+\glspl{lstm}. \glspl{lstm} have had a lot of success in other areas and here I will 
+examine their suitability in this problem. I will run a number of experiments to determine
+how this model compares with other models. 
