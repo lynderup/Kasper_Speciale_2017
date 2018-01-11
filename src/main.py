@@ -54,7 +54,7 @@ def compare_datasets():
 
         runs = []
         for _ in range(3):
-            m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider, should_step3=False)
+            m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider, should_step3=False)
 
             m.train()
             runs.append(m.inference())
@@ -84,7 +84,7 @@ def test():
 
     runs = []
     for i in range(10):
-        m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider, should_step3=False)
+        m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider, should_step3=False)
 
         m.train()
         runs.append(m.inference())

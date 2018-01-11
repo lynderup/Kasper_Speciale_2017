@@ -29,6 +29,7 @@ structure_encode_dict = {"1": mappings.INSIDE,
                          "2": mappings.OUTSIDE,
                          "U": mappings.UNKNOWN,
                          "0": mappings.UNKNOWN,
+                         "I": mappings.UNKNOWN,
                          "L": mappings.LOOP}
 
 
