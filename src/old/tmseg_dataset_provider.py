@@ -5,7 +5,7 @@ import tensorflow as tf
 import old.dataset_provider as dataset_provider
 from dataprovider.utils.download_dataset import download_dataset
 from dataprovider.utils.fasta_to_tfrecord_converter import fasta_to_tfrecord
-from encoders_and_decoders.tmseg_encoder_and_decoder import TMSEGEncoder
+from encoders.tmseg_encoder import TMSEGEncoder
 
 
 class TMSEGDatasetProvider(dataset_provider.DatasetProvider):

@@ -1,4 +1,5 @@
 import model.joint_model as joint_model
+import dataprovider.joint_dataprovider as joint_dataprovider
 import model.util as util
 import decoder.decoder as decoder
 import model.hyper_params_search as hyper_params_search
@@ -17,15 +18,76 @@ config = joint_model.StepConfig(batch_size=10,
 
 model_config = joint_model.default_config._replace(step1_config=config)
 
+
+def compare_datasets():
+    logdir = "test/"
+
+    opm_set1 = "opm_set1"
+    opm_set2 = "opm_set2"
+    opm_set3 = "opm_set3"
+    opm_set4 = "opm_set4"
+
+    pdbtm_set1 = "pdbtm_set1"
+    pdbtm_set2 = "pdbtm_set2"
+    pdbtm_set3 = "pdbtm_set3"
+    pdbtm_set4 = "pdbtm_set4"
+
+    test1 = {"trainset": ["opm_set1", "opm_set2"],
+             "validationset": ["opm_set3"]}
+
+    test2 = {"trainset": ["pdbtm_set1", "pdbtm_set2"],
+             "validationset": ["pdbtm_set3"]}
+
+    test3 = {"trainset": ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"],
+             "validationset": ["opm_set3"]}
+
+    test4 = {"trainset": ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"],
+             "validationset": ["pdbtm_set3"]}
+
+    tests = [test1, test2, test3, test4]
+
+    statistics = Statistics()
+
+    for i, test in enumerate(tests):
+        test["testset"] = test["validationset"]
+        dataprovider = joint_dataprovider.Dataprovider(**test)
+
+        runs = []
+        for _ in range(3):
+            m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider, should_step3=False)
+
+            m.train()
+            runs.append(m.inference())
+
+        decoded_runs = []
+        for set_lengths, set_inputs, set_targets, set_predictions in runs:
+            corrected_predictions = util.numpy_step2(set_predictions)
+            predictions = zip(set_lengths, set_inputs, set_targets, corrected_predictions)
+            decoded_runs.append(decoder.decode_step123(predictions))
+
+        statistics.add_model(("Test%s" % i, decoded_runs))
+    statistics.print_statistics()
+
+
 def test():
     statistics = Statistics()
 
-    # m = joint_model.Model(logdir="test/", should_step3=False)
-    #
-    # m.train()
-    # set_lengths, set_inputs, set_targets, set_predictions = m.inference()
+    logdir = "test/"
+    # trainset = ["opm_set1", "opm_set2", "opm_set3"]
+    trainset = ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"]
+    # validationset = testset = ["opm_set4"]
+    validationset = testset = ["opm_set3"]
 
-    runs = cross_validation.do_3_fold_cross_validation(config=model_config)
+    dataprovider = joint_dataprovider.Dataprovider(trainset=trainset,
+                                                   validationset=validationset,
+                                                   testset=testset)
+
+    runs = []
+    for i in range(10):
+        m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider, should_step3=False)
+
+        m.train()
+        runs.append(m.inference())
 
     step1_predictions = []
     step2_predictions = []
@@ -44,10 +106,9 @@ def test():
     statistics.print_predictions()
     statistics.print_statistics()
 
+
 if __name__ == '__main__':
-    test()
+    # test()
+    compare_datasets()
     # hyper_params_search.do_hyper_params_search()
     # cross_validation.do_3_fold_cross_validation()
-
-
-

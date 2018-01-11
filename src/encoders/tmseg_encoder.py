@@ -31,14 +31,6 @@ structure_encode_dict = {"1": mappings.INSIDE,
                          "0": mappings.UNKNOWN,
                          "L": mappings.LOOP}
 
-structure_decode_dict = {mappings.INSIDE: "i",
-                         mappings.HELIX: "h",
-                         mappings.OUTSIDE: "o",
-                         mappings.UNKNOWN: "u"}
-
-step1_target_decode_dict = {mappings.MEMBRANE: "M",
-                            mappings.NONMEMBRANE: "n"}
-
 
 class TMSEGEncoder:
     def encode_sequence(self, sequence):
@@ -46,14 +38,3 @@ class TMSEGEncoder:
 
     def encode_structure(self, structure):
         return [structure_encode_dict[z] for z in structure]
-
-
-class TMSEGDecoder:
-
-    # Wrong!! Decoding of seqence doesn't work right now
-    def decode_sequence(self, sequence):
-        return "".join([observables[x] for x in sequence])
-
-    def decode_structure(self, structure):
-        # return "".join([structure_decode_dict[z] for z in structure])
-        return "".join([step1_target_decode_dict[z] for z in structure])

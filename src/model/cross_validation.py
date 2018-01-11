@@ -3,7 +3,6 @@ import model.joint_model as joint_model
 
 
 def do_3_fold_cross_validation(config=None, logdir=None):
-    dataset_path = "datasets/tmseg/data/sets/tfrecords/"
 
     if logdir is None:
         logdir = "test/"
@@ -18,8 +17,7 @@ def do_3_fold_cross_validation(config=None, logdir=None):
         trainset = sets[:i] + sets[i + 1:]
         validationset = testset = sets[i:i + 1]
 
-        dataprovider = joint_dataprovider.Dataprovider(path=dataset_path,
-                                                       trainset=trainset,
+        dataprovider = joint_dataprovider.Dataprovider(trainset=trainset,
                                                        validationset=validationset,
                                                        testset=testset)
 
