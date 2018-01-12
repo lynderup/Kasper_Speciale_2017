@@ -44,7 +44,6 @@ def find_membranes(logits):
 
 
 def filter_membranes(batch_membranes):
-
     new_batch_membranes = []
     for membranes in batch_membranes:
 
@@ -72,7 +71,7 @@ def numpy_step2(batch_predictions):
         for start, end in membranes:
             length = end - start
 
-            if length <= 5:
+            if length <= 7:
                 prediction[start:end] = [mappings.NONMEMBRANE] * length
 
             if length >= 35:
@@ -86,7 +85,6 @@ def numpy_step2(batch_predictions):
 
 
 def add_fully_connected_layer(input_tensor, input_size, output_size, name):
-
     weight = tf.get_variable(name + "_w", [input_size, output_size], dtype=tf.float32)
     bias = tf.get_variable(name + "_b", [output_size], dtype=tf.float32)
 
@@ -137,7 +135,6 @@ def add_bidirectional_lstm_layer(input_tensor, lengths, num_units, batch_size, s
 
 
 def add_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output=True):
-
     fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(num_units=num_units,
                                                 forget_bias=0,
                                                 cell_clip=None,
@@ -148,10 +145,10 @@ def add_lstm_layer(input_tensor, lengths, num_units, batch_size, sequence_output
                      tf.zeros([batch_size, num_units], tf.float32))
 
     output, state = fw_lstm(input_tensor,
-                                  initial_state=initial_state,
-                                  dtype=None,
-                                  sequence_length=lengths,
-                                  scope="lstm")
+                            initial_state=initial_state,
+                            dtype=None,
+                            sequence_length=lengths,
+                            scope="lstm")
 
     with tf.variable_scope("lstm", reuse=True):
         weight = tf.get_variable("kernel")

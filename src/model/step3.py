@@ -58,7 +58,7 @@ class ModelStep3:
                                                                  config.batch_size,
                                                                  sequence_output=False)
 
-        output = util.add_lstm_layer(embedded_input, lengths, config.num_units , config.batch_size, sequence_output=False)
+        output = util.add_lstm_layer(embedded_input, lengths, config.num_units, config.batch_size, sequence_output=False)
 
         logits = util.add_fully_connected_layer(output,
                                                 config.num_units,

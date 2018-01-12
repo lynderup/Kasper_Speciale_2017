@@ -26,7 +26,7 @@ structure_decode_dict = {mappings.INSIDE: "i",
                          mappings.OUTSIDE: "o",
                          mappings.UNKNOWN: "u"}
 
-step1_target_decode_dict = {mappings.MEMBRANE: "M",
+step1_target_decode_dict = {mappings.MEMBRANE: "H",
                             mappings.NONMEMBRANE: "n"}
 
 
