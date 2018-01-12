@@ -60,15 +60,17 @@ to use on raw sequence data and because of good results in a lot of different pr
 Ideally I would have looked at all steps and compared them individually with the corresponding step in TMSEG,
 but due to time constraint I have concentrated on the first three steps and mainly compared them together.
 
-\begin{figure}
-	\centering
-%	\includegraphics[width=\textwidth]{}
-	\caption{The layers for the model of step 1}
-	\label{fig:step1}
-\end{figure}
 \subsection{Layout of Model}
 
 \subsubsection{Step 1}
+
+\begin{figure}
+	\centering
+	%	\includegraphics[width=\textwidth]{}
+	\caption{The layers for the model of step 1}
+	\label{fig:step1}
+\end{figure}
+
 The model for step 1 consists of an embedding layer with a bidirectional \gls{lstm} on top followed by a
 forward \gls{lstm} and a softmax layer on top to give a probability distribution of the output classes.
 An illustration of the model for step 1 can be seen in Figure \ref{fig:step1}.
@@ -105,7 +107,44 @@ a probability distribution of the output classes.
  
 \subsubsection{Step 2}
 
+\begin{figure}
+	\centering
+	\begin{BVerbatim}
+Sequence:       ...CDVVVVGGGISGMA...
+True structure: ...nnnnnnnnnnnnnn...
+Before step 2:  ...nnHHHHnnnnHHnn...
+After step 2:   ...nnnnnnnnnnnnnn...
+	\end{BVerbatim}
+	\caption{A prediction containing noise}
+	\label{fig:noisy_prediction}
+\end{figure}
+
+Step 2 is not a machine learning model, but a post processing of the output of step 1. The output from 
+step 1 contains a lot of noise in the form of sudden short peaks for some classes and regions where the 
+model is uncertain of which class the positions belong to which causes the predicted structure to contain
+regions with changing classes as can be seen in Figure \ref{fig:noisy_prediction}. The purpose of step 2
+is to remove as much as possible of this noise without removing good parts of the prediction.
+This is done, as in TMSEG, by first averaging each position from a window of size five around the position.
+After this is consecutive sequences of \glspl{tmh} shorter than seven, changed into non-\gls{tmh}. 
+
+I did not apply penalties to each class as they did in TMSEG, because the values was empirical determined 
+and specific to their model. It would maybe be possible to remove some of the uncertainty by applying
+penalties, but could as well function as a bias for how sure the model should be in a prediction instead 
+of giving the best average result, I have therefore chosen to not use time on this.
+
 \subsubsection{Step 3}
+The layout of the model for step 3 is almost identical to the model for step 1, the only difference
+in the layout is the input to the softmax layer is the cell-state of the previous \gls{lstm} layer
+instead of the sequence output. This is done because the model's purpose is to make prediction on
+the whole input and not on each position. The biggest difference to step 1 is not in the layout,
+but in the purpose and therefore the input and training. The purpose of step 3 is to adjust the 
+endpoints of a \gls{tmh} and this is done, like in TMSEG, by taking a segment of the sequence 
+and training the model to determine the probability of that segment to be a \gls{tmh}. 
+This is used to adjust the endpoints by generating segments by shifting the endpoints of the 
+previous predicted \gls{tmh} and using the model to determine which segment has the highest
+probability of being a \gls{tmh}. The training og this model is done by making these segments for
+the \glspl{tmh} in the true structure and labelling the the segments of the true \glspl{tmh} as \gls{tmh}
+and the others as non-\gls{tmh}. 
 
 \subsection{Machine Learning Libraries}
 A lot of different machine learning libraries exists, like Tensorflow\cite{tensorflow}, Caffe\cite{caffe}, 
@@ -115,7 +154,7 @@ and faster. I have chosen to use Tensorflow mostly because I had prior knowledge
 With tensorflow you first define a computation graph for the model and then you run the graph.
 This has the advantages that the graph is just a data structure and therefore can be language and platform 
 independent, and the defining of the computation graph and the running of it can be separated to different 
-processes. The running can therefore be handled by a highly optimized backend and the defining can be done 
+processes. The running can therefore be handled by a highly optimized back-end and the defining can be done 
 by using an API in a different language.
 The library also adds a lot of modules that can be used together as blocks to form large parts of the 
 computation graph. Most standard components of machine learning models, like different layer types, 
@@ -124,10 +163,51 @@ This gives the ability to concentrate on non standard parts of the model that is
 problem instance and not the type of machine learning used.
 
 \subsection{Implementation}
-% Hvorfor tensorflow, python
-% Hvad får vi fra tensorflow, hvilket arbejde har vi selv gjort
-% Hvor meget arbejde ligger der i de forskellige dele af model
+The Tensorflow api for Python is the most stable and complete, I have therefore chosen to use 
+the language Python to implement the model in. As mentioned earlier, Tensorflow comes with 
+implementations of most machine learning components, for example a \gls{lstm} layer can 
+be added to the combutation graph by first specifying the hyper-parameters, like the size
+which is called \texttt{num\_units}, which is done by the following lines of code:
 
-% Tensorflow giver selve machine learning bygge klodserne 
-% men vi har selv sat dem sammen til en model 
-% For og efter behandling af dataen har der også lagt meget arbejde i
+\begin{lstlisting}[language=Python]
+fw_lstm = tf.contrib.rnn.LSTMBlockFusedCell(
+    num_units=num_units,
+    forget_bias=0,
+    cell_clip=None,
+    use_peephole=False)
+\end{lstlisting}
+
+thereafter the initial state has to be specified, which could be zeros or the state from the last 
+input. If each input have some connection it could make sense to use the state from last, 
+of course it has to start with something at some point. I have chosen to start fresh with zeroes 
+with each new sequence. As mentioned in section \ref{sec:lstm}, the state consists of two parts
+the cell-state, $C$, and the previous output, $h$, the code to create the initial state therefore 
+becomes:
+
+\begin{lstlisting}[language=Python]
+initial_state = (
+    tf.zeros([batch_size, num_units], tf.float32),
+    tf.zeros([batch_size, num_units], tf.float32))
+\end{lstlisting}
+
+Then to add the layer to the graph, the input node called \texttt{input\_tensor}, the initial state, 
+and a node containing the lengths of the input sequences has to be specified, which is done by:
+
+\begin{lstlisting}[language=Python]
+output, state = fw_lstm(input_tensor,
+                        initial_state=initial_state,
+                        dtype=None,
+                        sequence_length=lengths,
+                        scope="lstm")
+\end{lstlisting}
+
+This gives a graph node, \texttt{output}, containing the output from the  layer, which can be used
+as input on the next layer. Different layers can be added in a similar way. It is therefore not 
+the most complicated part of the model that is the most difficult to implement, but the parts
+that is specific to this model, like pre- and post-processing of the data. Tensorflow is designed 
+to make it easy to do linear algebra on tensors, which is a collection of matrices. This is the 
+reason it is easy to implement \glspl{ann} in Tensorflow, but tasks like the filters applied by 
+step 2 and the generation of segments in step 3 cannot be expressed as linear algebra and is 
+therefore not as easy to implement with tensorflow. Most of the work of implementing the model
+therefore lies in these parts. 
+
