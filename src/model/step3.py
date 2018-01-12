@@ -27,7 +27,6 @@ class ModelStep3:
             self.logits_step3 = logits
 
         var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
-        print(var_list_step3)
         self.saver = tf.train.Saver(var_list_step3)
 
         # Build training graph step3
@@ -112,6 +111,8 @@ class ModelStep3:
 
             for i in range(self.config.train_steps):
                 print(i, end=', ', flush=True)
+                if i > 0 and i % 50 == 0:
+                    print()
 
                 fetches = [merged_sum,
                            self.train_step_step3]

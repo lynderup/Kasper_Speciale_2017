@@ -9,7 +9,6 @@ from encoders.tmseg_encoder import TMSEGEncoder
 
 
 class Dataprovider:
-
     def __init__(self, path=None, trainset=None, validationset=None, testset=None):
 
         if path is None:
@@ -18,7 +17,7 @@ class Dataprovider:
         else:
             self.dataset_path = path
 
-        if trainset is None: # set all or none
+        if trainset is None:  # set all or none
             self.trainset = ["opm_set1", "opm_set2"]
             self.validationset = ["opm_set3"]
             self.testset = ["opm_set3"]
@@ -28,17 +27,19 @@ class Dataprovider:
             self.testset = testset
 
     def get_step1_dataprovider(self, batch_size):
-        return dataprovider.dataprovider_step1.DataproviderStep1(batch_size=batch_size,
-                                                                 path=self.dataset_path,
-                                                                 trainset=self.trainset,
-                                                                 validationset=self.validationset,
-                                                                 testset=self.testset)
+        step1_data = dataprovider.dataprovider_step1.DataproviderStep1(path=self.dataset_path)
+        step1_data.initilize_datasets(batch_size=batch_size,
+                                      trainset=self.trainset,
+                                      validationset=self.validationset,
+                                      testset=self.testset)
+        return step1_data
 
     def get_step3_dataprovider(self, batch_size):
-        return dataprovider.dataprovider_step3.DataproviderStep3(batch_size=batch_size,
-                                                                 path=self.dataset_path,
-                                                                 trainset=self.trainset,
-                                                                 validationset=self.validationset)
+        step3_data = dataprovider.dataprovider_step3.DataproviderStep3(path=self.dataset_path)
+        step3_data.initilize_datasets(batch_size=batch_size,
+                                      trainset=self.trainset,
+                                      validationset=self.validationset)
+        return step3_data
 
 
 def download_and_convert_if_not_existing():

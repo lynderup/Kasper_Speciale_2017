@@ -61,9 +61,7 @@ def latexify_multiple_evaluators_tables(tables):
         format_string.append("\\\\ \n")
         format_string = "".join(format_string)
 
-        print(format_string)
         for row in rows:
-            print(len(row))
             latex_rows.append(format_string.format(*row))
 
         latex_rows.append("\\end{tabular}")
@@ -93,9 +91,7 @@ def stringify_multiple_evaluators_tables(tables):
         format_string.append("\n")
         format_string = "".join(format_string)
 
-        print(format_string)
         for row in rows:
-            print(len(row))
             string_rows.append(format_string.format(*row))
 
         string_tables.append("".join(string_rows))
@@ -185,7 +181,7 @@ class Statistics:
     # Assumes predictions in same order in all added models
     def print_predictions(self):
 
-        models = [model[0] for _, model in self.models]
+        models = [model[0] for _, model in self.models if len(model) > 0]
         if len(models) > 0:
             for i, (name, sequence, targets, _) in enumerate(models[0]):
                 print(name)

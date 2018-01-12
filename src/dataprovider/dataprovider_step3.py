@@ -88,31 +88,27 @@ def flat_map(length, sequence, sequence_sup_data, step1_target):
 
 
 class DataproviderStep3:
-    def __init__(self, batch_size, path, trainset, validationset):
+    def __init__(self, path):
         self.dataset_path = path
 
-        self.training_dataset = self.get_dataset(batch_size, trainset)
-        self.validation_dataset = self.get_dataset(batch_size, validationset)
+        self.dataprovider_step1 = dataprovider_step1.DataproviderStep1(path)
 
-    # def get_table_init_op(self):
-    #     return structure_to_step1_target_table.init
+    def initilize_datasets(self, batch_size, trainset, validationset):
+        self.training_dataset = self.get_dataset(batch_size, trainset, repeat_shuffle=True)
+        self.validation_dataset = self.get_dataset(batch_size, validationset, repeat_shuffle=True)
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
-        filename_suffix = ".tfrecord"
-        paths = [self.dataset_path + filename + filename_suffix for filename in filenames]
-
-        dataset = tf.data.TFRecordDataset(paths)
-        dataset = dataset.map(dataprovider_step1.parse_function)
-        dataset = dataset.map(dataprovider_step1.structure_to_step_targets)
+        dataset = self.dataprovider_step1.get_dataset(batch_size, filenames, repeat_shuffle=False, should_pad=False)
         dataset = dataset.flat_map(flat_map)
-        dataset = dataset.repeat(None)  # Infinite iterations
-        dataset = dataset.shuffle(buffer_size=500)
+        if repeat_shuffle:
+            dataset = dataset.repeat(None)  # Infinite iterations
+            dataset = dataset.shuffle(buffer_size=500)
         dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], []))
 
         return dataset
 
     def get_table_init_op(self):
-        return dataprovider_step1.structure_to_step1_target_table.init
+        return self.dataprovider_step1.get_table_init_op()
 
     def get_iterator(self):
         handle = tf.placeholder(tf.string, shape=[])

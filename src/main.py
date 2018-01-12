@@ -74,7 +74,8 @@ def test():
 
     logdir = "test/"
     # trainset = ["opm_set1", "opm_set2", "opm_set3"]
-    trainset = ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"]
+    trainset = ["opm_set1", "opm_set2"]
+    # trainset = ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"]
     # validationset = testset = ["opm_set4"]
     validationset = testset = ["opm_set3"]
 
@@ -83,10 +84,11 @@ def test():
                                                    testset=testset)
 
     runs = []
-    for i in range(10):
-        m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider, should_step3=False)
+    for i in range(1):
+        m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
         m.train()
+        m.train_step3()
         runs.append(m.inference())
 
     step1_predictions = []
@@ -108,7 +110,7 @@ def test():
 
 
 if __name__ == '__main__':
-    # test()
-    compare_datasets()
+    test()
+    # compare_datasets()
     # hyper_params_search.do_hyper_params_search()
     # cross_validation.do_3_fold_cross_validation()

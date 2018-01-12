@@ -22,12 +22,13 @@ def parse_function(example_proto):
 
 
 class DataproviderStep1:
-    def __init__(self, batch_size, path, trainset, validationset, testset):
+    def __init__(self, path):
         self.structure_to_step1_target_table = mappings.dict_to_hashtable(mappings.structure_to_step1_target_dict)
         self.sequence_to_sup_data_dict_table = mappings.dict_to_embedding_tensor(mappings.sequence_to_sup_data_dict)
 
         self.dataset_path = path
 
+    def initilize_datasets(self, batch_size, trainset, validationset, testset):
         self.training_dataset = self.get_dataset(batch_size, trainset, repeat_shuffle=True)
         self.validation_dataset = self.get_dataset(batch_size, validationset, repeat_shuffle=True)
         self.test_dataset = self.get_dataset(batch_size, testset)
@@ -42,7 +43,7 @@ class DataproviderStep1:
 
         return lengths, sequence, sequence_sup_data, step1_target
 
-    def get_dataset(self, batch_size, filenames, repeat_shuffle=False):
+    def get_dataset(self, batch_size, filenames, repeat_shuffle=False, should_pad=True):
         filename_suffix = ".tfrecord"
         paths = [self.dataset_path + filename + filename_suffix for filename in filenames]
 
@@ -52,7 +53,8 @@ class DataproviderStep1:
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=1000)
-        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], [None]))
+        if should_pad:
+            dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], [None]))
 
         return dataset
 

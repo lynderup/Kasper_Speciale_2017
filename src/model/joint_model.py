@@ -7,6 +7,7 @@ import tensorflow as tf
 import model.step1 as step1
 import model.step3 as step3
 import dataprovider.joint_dataprovider as joint_dataprovider
+
 # import dataprovider.dataprovider_step1
 # import dataprovider.dataprovider_step3
 
@@ -18,25 +19,28 @@ StepConfig = namedtuple("StepConfig", ["batch_size",
                                        "decay_steps",
                                        "decay_rate",
                                        "num_units",
-                                       "train_steps"])
+                                       "train_steps",
+                                       "keep_prop"])
 
 default_step1_config = StepConfig(batch_size=10,
                                   num_input_classes=20,
                                   num_output_classes=2,
-                                  starting_learning_rate=0.1,
+                                  starting_learning_rate=0.01,
                                   decay_steps=10,
-                                  decay_rate=0.96,
-                                  num_units=13,
-                                  train_steps=100)
+                                  decay_rate=0.99,
+                                  num_units=50,  # 50
+                                  train_steps=1000,
+                                  keep_prop=1)
 
-default_step3_config = StepConfig(batch_size=10,
+default_step3_config = StepConfig(batch_size=50,
                                   num_input_classes=20,
                                   num_output_classes=2,
-                                  starting_learning_rate=0.1,
-                                  decay_steps=100,
-                                  decay_rate=0.96,
-                                  num_units=13,
-                                  train_steps=1000)
+                                  starting_learning_rate=0.01,
+                                  decay_steps=10,
+                                  decay_rate=0.99,
+                                  num_units=50,  # 50
+                                  train_steps=1000,
+                                  keep_prop=1)
 
 default_config = ModelConfig(step1_config=default_step1_config, step3_config=default_step3_config)
 
@@ -145,7 +149,15 @@ class Model:
         summary_writer.add_graph(tf.get_default_graph())
 
         self.model_step1.train(summary_writer)
-        # self.model_step3.train(summary_writer)
+
+        summary_writer.flush()
+        summary_writer.close()
+
+    def train_step3(self):
+        summary_writer = tf.summary.FileWriter(self.step3_logdir)
+        summary_writer.add_graph(tf.get_default_graph())
+
+        self.model_step3.train(summary_writer)
 
         summary_writer.flush()
         summary_writer.close()
