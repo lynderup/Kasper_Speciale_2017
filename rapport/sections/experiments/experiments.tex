@@ -57,10 +57,45 @@ given hyper-parameter.
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{sections/experiments/overfitting}
-	\caption{The development of the loss function on the validation set over the training.
-	shows clear signs of overfitting. Smoothed to make the trend more clear}
+	\caption{The development of the step 1 loss function on the validation set over the training.
+	shows clear signs of overfitting. Smoothed to make the trend more clear.}
 	\label{fig:overfitting}
 \end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{sections/experiments/loss_on_trainset}
+	\caption{The step 1 loss of the training set as a function of the training steps.}
+	\label{fig:train_loss}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{sections/experiments/regularization}
+	\caption{The step 1 loss of the validation set as a function of the training steps.
+	At the end off training is the top function without any regularization, 
+	the second is with dropout and the last is with both drop out and 
+	l2 regularization.}
+	\label{fig:regularization}
+\end{figure}
+
+Some problems arose under training. In Figure \ref{fig:overfitting} is the loss of the 
+validation set plotted as a function of the training steps, and it shows that the loss
+stops improving at around training step 300, starts rising after that. The same trend 
+cannot be seen in the loss on the training set as shown in Figure \ref{fig:train_loss}.
+This is a sign of the model is overfitting by learning details about the training set 
+that does not generalise to new data. Different techniques exists to prevent
+overfitting. The two I have chosen to use is called dropout and l2 regularization.
+With dropout a certain percentages of the output nodes of a layer is set to zero and 
+the rest is scaled to keep the sum approximately the same. This forces the network 
+to not rely on specific nodes and this helps reduce the overfitting. The other 
+technique, l2 regularization, adds a term to the loss that is proportional to the sums 
+of the weights. This prevents the weights from getting large which helps reduce the 
+overfitting. In Figure \ref{fig:regularization} can the effect of the regularization
+techniques be seen. The run where only dropout was used starts higher than the run where
+no regularization was used but don't overfit as much so it ends below. The run with 
+both dropout and l2 regularization starts below the other two and keeps below throughout 
+the training and the problem of overfitting is also almost entirely gone. 
 
 \subsection{Measurements}
 
