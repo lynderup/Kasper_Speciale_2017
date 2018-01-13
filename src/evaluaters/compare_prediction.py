@@ -1,3 +1,7 @@
+import dataprovider.mappings as mappings
+import decoder.decoder as decoder
+
+
 def endpoints_diff_below_5_overlap_over_50_percent(start_diff, end_diff, overlap, longest):
     return start_diff <= 5 and end_diff <= 5 and overlap * 2 >= longest
 
@@ -25,7 +29,7 @@ def find_tmh(annotation):
 
     for i, z in enumerate(annotation):
 
-        if z == "M":
+        if z == decoder.step1_target_decode_dict[mappings.MEMBRANE]:
             if not is_in_tmh:
                 is_in_tmh = True
                 tmh_start = i

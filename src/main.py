@@ -7,16 +7,29 @@ import model.cross_validation as cross_validation
 
 from evaluaters.statistics import Statistics
 
-config = joint_model.StepConfig(batch_size=10,
-                                num_input_classes=20,
-                                num_output_classes=2,
-                                starting_learning_rate=0.01,
-                                decay_steps=10,
-                                decay_rate=0.99,
-                                num_units=50,  # 50
-                                train_steps=1000)  # 1000
+step1_config = joint_model.StepConfig(batch_size=10,
+                                      num_input_classes=20,
+                                      num_output_classes=2,
+                                      starting_learning_rate=0.01,
+                                      decay_steps=10,
+                                      decay_rate=0.99,
+                                      num_units=50,  # 50
+                                      train_steps=100,  # 1000
+                                      keep_prop=0.5,
+                                      l2_beta=0.001)
 
-model_config = joint_model.default_config._replace(step1_config=config)
+step3_config = joint_model.StepConfig(batch_size=50,
+                                      num_input_classes=20,
+                                      num_output_classes=2,
+                                      starting_learning_rate=0.01,
+                                      decay_steps=50,
+                                      decay_rate=0.99,
+                                      num_units=50,  # 50
+                                      train_steps=1000,
+                                      keep_prop=0.5,
+                                      l2_beta=0.05)
+
+model_config = joint_model.ModelConfig(step1_config=step1_config, step3_config=step3_config)
 
 
 def compare_datasets():
@@ -87,8 +100,12 @@ def test():
     for i in range(1):
         m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
+        m.build_step1(logdir=logdir + "step1/continue_test/")
+        m.build_step3(logdir=logdir + "step3/continue_test/")
+
         m.train()
         m.train_step3()
+
         runs.append(m.inference())
 
     step1_predictions = []

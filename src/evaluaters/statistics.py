@@ -145,7 +145,6 @@ class Statistics:
         self.models.append(model)
 
     def print_statistics(self):
-
         single_evaluator_tables = []
         for evaluator_name, evaluator in self.evaluators:
             rows = []
@@ -180,7 +179,6 @@ class Statistics:
 
     # Assumes predictions in same order in all added models
     def print_predictions(self):
-
         models = [model[0] for _, model in self.models if len(model) > 0]
         if len(models) > 0:
             for i, (name, sequence, targets, _) in enumerate(models[0]):

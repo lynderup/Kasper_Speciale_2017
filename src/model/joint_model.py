@@ -20,7 +20,8 @@ StepConfig = namedtuple("StepConfig", ["batch_size",
                                        "decay_rate",
                                        "num_units",
                                        "train_steps",
-                                       "keep_prop"])
+                                       "keep_prop",
+                                       "l2_beta"])
 
 default_step1_config = StepConfig(batch_size=10,
                                   num_input_classes=20,
@@ -30,17 +31,19 @@ default_step1_config = StepConfig(batch_size=10,
                                   decay_rate=0.99,
                                   num_units=50,  # 50
                                   train_steps=1000,
-                                  keep_prop=1)
+                                  keep_prop=0.5,
+                                  l2_beta=0.001)
 
 default_step3_config = StepConfig(batch_size=50,
                                   num_input_classes=20,
                                   num_output_classes=2,
                                   starting_learning_rate=0.01,
-                                  decay_steps=10,
+                                  decay_steps=50,
                                   decay_rate=0.99,
                                   num_units=50,  # 50
-                                  train_steps=1000,
-                                  keep_prop=1)
+                                  train_steps=10000,
+                                  keep_prop=0.5,
+                                  l2_beta=0.05)
 
 default_config = ModelConfig(step1_config=default_step1_config, step3_config=default_step3_config)
 
@@ -85,64 +88,52 @@ def make_logdir(logdir, step_config):
 
 class Model:
     def __init__(self, logdir, config=default_config, dataprovider=None, should_step1=True, should_step3=True):
-        print("Building graph")
-        start = time.time()
 
         tf.reset_default_graph()
+        self.config = config
+        self.logdir = logdir
+
+        self.step1_logdir = None
+        self.step3_logdir = None
+        self.model_step1 = None
+        self.model_step3 = None
 
         if dataprovider is None:
-            dataprovider = joint_dataprovider.Dataprovider()
+            self.dataprovider = joint_dataprovider.Dataprovider()
+        else:
+            self.dataprovider = dataprovider
 
-        if should_step1:
-            self.step1_logdir = make_logdir(logdir + "step1/", config.step1_config)
+    def build_step1(self, logdir=None):
+        if logdir is None:
+            self.step1_logdir = make_logdir(self.logdir + "step1/", self.config.step1_config)
+        else:
+            self.step1_logdir = logdir
 
-            # Data input
-            with tf.variable_scope("Input", reuse=None):
-                dataprovider_step1 = dataprovider.get_step1_dataprovider(batch_size=config.step1_config.batch_size)
-                step1_data = self.build_data_input_step1(dataprovider_step1)
+        print("Building step1 graph")
+        start = time.time()
 
-            with tf.variable_scope("Step1", reuse=None):
-                self.model_step1 = step1.ModelStep1(config.step1_config,
-                                                    self.step1_logdir,
-                                                    dataprovider_step1,
-                                                    *step1_data)
+        with tf.variable_scope("Step1", reuse=None):
+            self.model_step1 = step1.ModelStep1(self.config.step1_config,
+                                                self.step1_logdir,
+                                                self.dataprovider)
 
-        if should_step3:
-            self.step3_logdir = make_logdir(logdir + "step3/", config.step3_config)
+        print("Build step1 graph in: %i milliseconds" % ((time.time() - start) * 1000))
 
-            # Data input
-            with tf.variable_scope("Input", reuse=None):
-                dataprovider_step3 = dataprovider.get_step3_dataprovider(batch_size=config.step3_config.batch_size)
-                step3_data = self.build_data_input_step3(dataprovider_step3)
+    def build_step3(self, logdir=None):
+        if logdir is None:
+            self.step3_logdir = make_logdir(self.logdir + "step3/", self.config.step3_config)
+        else:
+            self.step3_logdir = logdir
 
-            with tf.variable_scope("Step3", reuse=None):
-                self.model_step3 = step3.ModelStep3(config.step3_config,
-                                                    self.step3_logdir,
-                                                    dataprovider_step3,
-                                                    *step3_data)
+        print("Building step3 graph")
+        start = time.time()
 
-        print("Build graph in: %i milliseconds" % ((time.time() - start) * 1000))
+        with tf.variable_scope("Step3", reuse=None):
+            self.model_step3 = step3.ModelStep3(self.config.step3_config,
+                                                self.step3_logdir,
+                                                self.dataprovider)
 
-    def build_data_input_step1(self, dataprovider):
-        handle, iterator = dataprovider.get_iterator()
-        lengths, sequences, sequence_sup_data, structures_step1 = iterator.get_next()
-
-        #  TODO: Tensors in wrong shapes. Need fixing!!!
-        sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
-        sequences = tf.transpose(sequences, perm=[1, 0])
-        structures_step1 = tf.transpose(structures_step1, perm=[1, 0])
-
-        return handle, lengths, sequences, sequence_sup_data, structures_step1
-
-    def build_data_input_step3(self, dataprovider):
-        handle, iterator = dataprovider.get_iterator()
-        lengths, sequences, sequence_sup_data, targets_step3 = iterator.get_next()
-
-        #  TODO: Tensors in wrong shapes. Need fixing!!!
-        sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
-        sequences = tf.transpose(sequences, perm=[1, 0])
-
-        return handle, lengths, sequences, sequence_sup_data, targets_step3
+        print("Build step3 graph in: %i milliseconds" % ((time.time() - start) * 1000))
 
     def train(self):
         summary_writer = tf.summary.FileWriter(self.step1_logdir)

@@ -6,20 +6,35 @@ import numpy as np
 import model.util as util
 
 
+def build_data_input_step3(dataprovider):
+    handle, iterator = dataprovider.get_iterator()
+    lengths, sequences, sequence_sup_data, targets_step3 = iterator.get_next()
+
+    #  TODO: Tensors in wrong shapes. Need fixing!!!
+    sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
+    sequences = tf.transpose(sequences, perm=[1, 0])
+
+    return handle, lengths, sequences, sequence_sup_data, targets_step3
+
+
 class ModelStep3:
-    def __init__(self, config, logdir, dataprovider, handle, lengths, sequences, sequence_sup_data, target_step3):
+    def __init__(self, config, logdir, dataprovider):
 
         self.config = config
         self.logdir = logdir
-        self.dataprovider = dataprovider
-        self.handle = handle
 
-        self.lengths = lengths
-        self.sequences = sequences
-        self.sequence_sup_data = sequence_sup_data
-        self.target_step3 = target_step3
+        self.global_step = tf.Variable(0, trainable=False)
 
-        global_step = tf.Variable(0, trainable=False)
+        # Data input
+        with tf.variable_scope("Input", reuse=None):
+            self.dataprovider = dataprovider.get_step3_dataprovider(batch_size=self.config.batch_size)
+            handle, lengths, sequences, sequence_sup_data, target_step3 = build_data_input_step3(self.dataprovider)
+
+            self.handle = handle
+            self.lengths = lengths
+            self.sequences = sequences
+            self.sequence_sup_data = sequence_sup_data
+            self.target_step3 = target_step3
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
@@ -27,7 +42,7 @@ class ModelStep3:
             self.logits_step3 = logits
 
         var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
-        self.saver = tf.train.Saver(var_list_step3)
+        self.saver = tf.train.Saver((*var_list_step3, self.global_step))
 
         # Build training graph step3
         with tf.variable_scope("Training", reuse=None):
@@ -37,7 +52,7 @@ class ModelStep3:
 
             learning_rate, loss_step3, train_step_step3 = self.build_training_graph(cross_entropy_loss_step3,
                                                                                     var_list=var_list_step3,
-                                                                                    global_step=global_step)
+                                                                                    global_step=self.global_step)
             self.learning_rate = learning_rate
             self.loss_step3 = loss_step3
             self.train_step_step3 = train_step_step3
@@ -51,16 +66,24 @@ class ModelStep3:
         embedded_input = tf.concat([embedded_input, sequence_sup_data], axis=2)
         self.embedded_input = embedded_input
 
+        keep_prop = tf.Variable(1, trainable=False, dtype=tf.float32, name="keep_prop")
+        self.keep_prop = keep_prop
+
         bidirectional_output = util.add_bidirectional_lstm_layer(embedded_input,
                                                                  lengths,
                                                                  config.num_units,
                                                                  config.batch_size,
-                                                                 sequence_output=False)
+                                                                 sequence_output=True)
+        bidirectional_output = tf.nn.dropout(bidirectional_output, keep_prop)
 
-        output = util.add_lstm_layer(embedded_input, lengths, config.num_units, config.batch_size, sequence_output=False)
+        output = util.add_lstm_layer(bidirectional_output,
+                                     lengths,
+                                     config.num_units * 2,
+                                     config.batch_size, sequence_output=False)
+        output = tf.nn.dropout(output, keep_prop)
 
         logits = util.add_fully_connected_layer(output,
-                                                config.num_units,
+                                                config.num_units * 2,
                                                 config.num_output_classes,
                                                 "softmax")
 
@@ -82,7 +105,7 @@ class ModelStep3:
         for weight in weights_list:
             l2_reg_loss += tf.nn.l2_loss(weight)
 
-        loss = cross_entropy_loss  # + l2_reg_loss
+        loss = cross_entropy_loss + config.l2_beta * l2_reg_loss
 
         train_step = optimizer.minimize(loss, var_list=var_list, global_step=global_step)
         return learning_rate, loss, train_step
@@ -91,17 +114,28 @@ class ModelStep3:
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+
+            checkpoint_path = self.logdir + "checkpoints/"
+            checkpoint_file = checkpoint_path + "model.ckpt"
+            if os.path.exists(checkpoint_path):
+                latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+                self.saver.restore(sess, latest_checkpoint)
+
             sess.run(self.dataprovider.get_table_init_op())
 
             handle = self.handle
+            keep_prop = self.keep_prop
+            global_step = self.global_step
 
             # get_handle returns (handle, init_op)
             train_handle, _ = sess.run(self.dataprovider.get_train_iterator_handle())
-            train_feed = {handle: train_handle}
+            train_feed = {handle: train_handle,
+                          keep_prop: self.config.keep_prop}
 
             # get_handle returns (handle, init_op)
             validation_handle, _ = sess.run(self.dataprovider.get_validation_iterator_handle())
-            validation_feed = {handle: validation_handle}
+            validation_feed = {handle: validation_handle,
+                               keep_prop: 1.0}
 
             sum_loss = tf.summary.scalar("step3/loss", self.loss_step3)
             sum_val_loss = tf.summary.scalar("step3/validation loss", self.loss_step3)
@@ -109,19 +143,21 @@ class ModelStep3:
 
             merged_sum = tf.summary.merge([sum_loss, sum_learn_rate])
 
-            for i in range(self.config.train_steps):
-                print(i, end=', ', flush=True)
-                if i > 0 and i % 50 == 0:
-                    print()
-
+            for _ in range(self.config.train_steps):
                 fetches = [merged_sum,
+                           global_step,
                            self.train_step_step3]
 
-                summary, _ = sess.run(fetches=fetches, feed_dict=train_feed)
+                summary, step, _ = sess.run(fetches=fetches, feed_dict=train_feed)
 
-                if i % 100 == 0:
+                print(step, end=', ', flush=True)
+                if step > 0 and step % 50 == 0:
+                    print()
+
+                if step % 10 == 0:
+                    self.saver.save(sess, checkpoint_file, global_step=step)
                     val_loss = sess.run(sum_val_loss, feed_dict=validation_feed)
-                    summary_writer.add_summary(val_loss, i)
-                    summary_writer.add_summary(summary, i)
+                    summary_writer.add_summary(val_loss, step)
+                    summary_writer.add_summary(summary, step)
 
-            self.saver.save(sess, self.logdir + "checkpoints/model.ckpt")
+            self.saver.save(sess, checkpoint_file)

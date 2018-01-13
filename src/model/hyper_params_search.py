@@ -5,13 +5,12 @@ import model.cross_validation as cross_validation
 
 import numpy as np
 
-params_to_search_coarse = {"starting_learning_rate": [1.0, 0.1, 0.01, 0.001],
-                           "decay_rate": [0.99, 0.96, 0.92],
-                           "num_units": [5, 10, 20, 50],
-                           "train_steps": [100, 200, 500, 1000]}
-
 # params_to_search_coarse = {"starting_learning_rate": [1.0, 0.1, 0.01, 0.001],
-#                            "decay_rate": [0.99, 0.96, 0.92]}
+#                            "decay_rate": [0.99, 0.96, 0.92],
+#                            "num_units": [5, 10, 20, 50],
+#                            "train_steps": [100, 200, 500, 1000]}
+
+params_to_search_coarse = {"l2_beta": [1.0, 0.1, 0.01, 0.001, 0.0001, 0.00001]}
 
 
 def do_hyper_params_search():
