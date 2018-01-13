@@ -14,3 +14,7 @@
 
 # Datasets
 *datasets/*
+
+# Logs
+test/*
+hyper_params_search/*
