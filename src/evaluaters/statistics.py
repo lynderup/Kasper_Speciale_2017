@@ -11,7 +11,7 @@ def latexify_tables(tables):
                       "Model & Precision & Recall \\\\ \\hline \n"]
 
         for row in table:
-            latex_rows.append("%s & $%.1f \\pm %.1f$ & $%.1f \\pm %.1f$ \\\\ \n" % row)
+            latex_rows.append("%s & $%.0f \\pm %.0f$ & $%.0f \\pm %.0f$ \\\\ \n" % row)
 
         latex_rows.append("\\end{tabular}")
 

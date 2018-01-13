@@ -1,3 +1,5 @@
+import time
+
 import model.joint_model as joint_model
 import dataprovider.joint_dataprovider as joint_dataprovider
 import model.util as util
@@ -103,9 +105,13 @@ def test():
         # m.build_step1(logdir=logdir + "step1/test_model/")
         # m.build_step3(logdir=logdir + "step3/test_model/")
 
-
+        start = time.time()
         step1_logdir = m.train_step1()
+        step1_train_time = time.time() - start
+
+        start = time.time()
         step3_logdir = m.train_step3()
+        step3_train_time = time.time() - start
 
         # step1_logdir = logdir + "step1/test_model/"
         # step3_logdir = logdir + "step3/test_model/"
@@ -133,6 +139,9 @@ def test():
 
     statistics.print_predictions()
     statistics.print_statistics()
+
+    print(step1_train_time)
+    print(step3_train_time)
 
 
 if __name__ == '__main__':

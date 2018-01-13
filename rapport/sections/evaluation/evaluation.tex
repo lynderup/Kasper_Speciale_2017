@@ -8,8 +8,9 @@
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{10\%}& \multicolumn{2}{|c}{25\%}& \multicolumn{2}{|c}{50\%}& \multicolumn{2}{|c}{75\%}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step1 & $ 82 \pm 2 $ & $ 90 \pm 2 $ & $ 80 \pm 2 $ & $ 89 \pm 1 $ & $ 72 \pm 5 $ & $ 80 \pm 6 $ & $ 50 \pm 2 $ & $ 56 \pm 3 $ \\ 
-			Step2 & $ 90 \pm 2 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 1 $ & $ 80 \pm 6 $ & $ 82 \pm 5 $ & $ 55 \pm 4 $ & $ 57 \pm 4 $ \\ 
+			Step1 & $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\ 
+			Step2 & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
+			Step3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\ 
 		\end{tabular}
 		\caption{Precision and recall for 10\%, 25\%, 50\% and 75\% overlap of true \gls{tmh} and predicted \gls{tmh}.}
 		\label{tab:overlap}
@@ -19,8 +20,9 @@
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{Below 10}& \multicolumn{2}{|c}{Below 5}& \multicolumn{2}{|c}{Below 2}& \multicolumn{2}{|c}{Equal 0}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step1 & $ 72 \pm 2 $ & $ 79 \pm 2 $ & $ 53 \pm 4 $ & $ 59 \pm 4 $ & $ 21 \pm 2 $ & $ 23 \pm 1 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
-			Step2 & $ 79 \pm 3 $ & $ 81 \pm 1 $ & $ 58 \pm 6 $ & $ 59 \pm 5 $ & $ 23 \pm 2 $ & $ 24 \pm 1 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
+			Step1 & $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			Step2 & $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			Step3 & $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
 		\end{tabular}
 		\caption{Precision and recall for endpoints difference between true 
 			\gls{tmh} and predicted \gls{tmh} below or equal to 10, 5, 2 and 0.}
@@ -39,32 +41,65 @@ overlap is very small and within one standard deviation from each other,
 this is implying to that if the model have made a prediction it has more than 
 $25\%$ or less than $10\%$ overlap with a true \gls{tmh}.
 Table \ref{tab:endpoint} shows that the changing the endpoint requirement a little 
-gives a big difference in the result, from a precision on $79 \pm 3$ for an endpoints 
-difference up to $10$ to a precision on $1 \pm 1$ for no endpoints difference.
+gives a big difference in the result, from a precision on $84 \pm 2$ for an endpoints 
+difference up to $10$ to a precision on $2 \pm 1$ for no endpoints difference.
 Both precision and recall is very low if the requirement for a predicted \gls{tmh}
 to be correct is that there is no difference in the endpoints, ie. the prediction 
 is $100\%$ correct, which means there are almost no $100\%$ correct predictions.
-From both measurement types can it be seen that step 2 helps a lot on the precision.
+From both measurement types can it be seen that step 2 helps a lot on especial 
+the precision. This is because it removes a lot of small \glspl{tmh} from the 
+prediction that does not correspond to real \glspl{tmh}, these small predicted 
+\glspl{tmh} was lowering the precision but don't have much impact on the recall.
+The results from step 3 is not very good, it doesn't change the result for 
+$10\%$ and $25\%$ overlap, but it is still slightly worse than step 2. 
+For $50\%$ overlap and endpoints difference below 5 and 10, it considerable lowers
+both precision and recall and for $75\%$ overlap and endpoints difference below 
+2, step 3 approximately halve the results. The increasing impact step 3 has on the 
+result as the requirement for the predictions gets stricter, is because step 3 
+can only move the endpoints 6 positions and 6 positions don't have much impact 
+if a prediction only has to have $10\%$ overlap but have a very large impact 
+if the endpoint difference has to be below 2. 
+Looking closer at the prediction from step 3 used to adjust the endpoints, it 
+seems to give the same probability for every segment. The probabilities only
+differs in the fifth decimal point and looks more like rounding inaccuracy
+than predictions. The model does not seem to be able to learn any meaningful
+thing from the input and have minimized the loss by always predicting the 
+distribution of the labels in the training data. 
+This failure to learn the patterns in the input data to accurately predict
+the start end end of \glspl{tmh} could be because patterns is too complex or 
+indistinct to learn with the size of the dataset or with the layout of the 
+model.
 
 \begin{table}
 	\centering 
 	\begin{tabular}{l|c|c} 
-		Model & Precision & Recall \\ \hline 
-		Step1 & $52.2 \pm 7.2$ & $58.6 \pm 6.7$ \\ 
-		Step2 & $60.8 \pm 8.2$ & $60.9 \pm 7.1$ \\ 
+		Model & Precision & Recall \\ \hline
+		Step1 & $64 \pm 3$ & $66 \pm 4$ \\ 
+		Step2 & $67 \pm 3$ & $69 \pm 3$ \\ 
+		Step3 & $49 \pm 3$ & $49 \pm 4$ \\
+		HMM   & $52 \pm 0$ & $29 \pm 0$ \\
 		TMSEG\cite{tmseg} & $87 \pm 3$ & $84 \pm 3$
 	\end{tabular}
     \caption{Precision and recall for 50\% overlap and endpoints difference below 5.}
 	\label{tab:pr50}
 \end{table}
 
-Table \ref{tab:pr50} compares the model with other models.
+In Table \ref{tab:pr50} is the precision and recall from using the same 
+measurement as used by TMSEG. It also shows how the model compares with 
+other models. TMSEG is a lot better at both precision and recall, 
+but both step 1 and step 2 is a big improvement to the simple \gls{hmm}
+based model. 
+
+\subsection{Running time}
+
+% Step 1 796s
+% Step 3 73s
 
 \subsection{Discussion}
 % What have we achieved? 
 % Further work for it to be even better. 
 
-\subsection{Learning what the Model has Learned}
+%\subsection{Learning what the Model has Learned}
 % Can we learn something from what the model has learn. By somehow visualising the weight matrices we can
 % se what the model has found to be importen and sometimes something interresting aboubt the problem can be learned
 
