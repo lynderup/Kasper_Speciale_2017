@@ -28,10 +28,9 @@ class DataproviderStep1:
 
         self.dataset_path = path
 
-    def initilize_datasets(self, batch_size, trainset, validationset, testset):
+    def initilize_datasets(self, batch_size, trainset, validationset):
         self.training_dataset = self.get_dataset(batch_size, trainset, repeat_shuffle=True)
         self.validation_dataset = self.get_dataset(batch_size, validationset, repeat_shuffle=True)
-        self.test_dataset = self.get_dataset(batch_size, testset)
 
     def get_table_init_op(self):
         return self.structure_to_step1_target_table.init
@@ -75,6 +74,3 @@ class DataproviderStep1:
         validation_iterator = self.validation_dataset.make_initializable_iterator()
         return validation_iterator.string_handle(), validation_iterator.initializer
 
-    def get_test_iterator_handle(self):
-        test_iterator = self.test_dataset.make_initializable_iterator()
-        return test_iterator.string_handle(), test_iterator.initializer

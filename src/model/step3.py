@@ -1,40 +1,23 @@
 import os
 
 import tensorflow as tf
-import numpy as np
 
 import model.util as util
 
 
-def build_data_input_step3(dataprovider):
-    handle, iterator = dataprovider.get_iterator()
-    lengths, sequences, sequence_sup_data, targets_step3 = iterator.get_next()
-
-    #  TODO: Tensors in wrong shapes. Need fixing!!!
-    sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
-    sequences = tf.transpose(sequences, perm=[1, 0])
-
-    return handle, lengths, sequences, sequence_sup_data, targets_step3
-
-
 class ModelStep3:
-    def __init__(self, config, logdir, dataprovider):
+    def __init__(self, config, logdir, is_training, dataprovider, step3_data):
 
         self.config = config
         self.logdir = logdir
+        self.is_training = is_training
+        self.dataprovider = dataprovider
 
         self.global_step = tf.Variable(0, trainable=False)
 
-        # Data input
-        with tf.variable_scope("Input", reuse=None):
-            self.dataprovider = dataprovider.get_step3_dataprovider(batch_size=self.config.batch_size)
-            handle, lengths, sequences, sequence_sup_data, target_step3 = build_data_input_step3(self.dataprovider)
+        handle, lengths, sequences, sequence_sup_data, targets_step3 = step3_data
 
-            self.handle = handle
-            self.lengths = lengths
-            self.sequences = sequences
-            self.sequence_sup_data = sequence_sup_data
-            self.target_step3 = target_step3
+        self.handle = handle
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
@@ -44,18 +27,19 @@ class ModelStep3:
         var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
         self.saver = tf.train.Saver((*var_list_step3, self.global_step))
 
-        # Build training graph step3
-        with tf.variable_scope("Training", reuse=None):
-            cross_entropy_loss_step3 = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=target_step3,
-                                                                                      logits=logits)
-            cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
+        if is_training:
+            # Build training graph step3
+            with tf.variable_scope("Training", reuse=None):
+                cross_entropy_loss_step3 = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=targets_step3,
+                                                                                          logits=logits)
+                cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
-            learning_rate, loss_step3, train_step_step3 = self.build_training_graph(cross_entropy_loss_step3,
-                                                                                    var_list=var_list_step3,
-                                                                                    global_step=self.global_step)
-            self.learning_rate = learning_rate
-            self.loss_step3 = loss_step3
-            self.train_step_step3 = train_step_step3
+                learning_rate, loss_step3, train_step_step3 = self.build_training_graph(cross_entropy_loss_step3,
+                                                                                        var_list=var_list_step3,
+                                                                                        global_step=self.global_step)
+                self.learning_rate = learning_rate
+                self.loss_step3 = loss_step3
+                self.train_step_step3 = train_step_step3
 
     def build_model_step3(self, sequences, sequence_sup_data, lengths):
         config = self.config
@@ -74,13 +58,15 @@ class ModelStep3:
                                                                  config.num_units,
                                                                  config.batch_size,
                                                                  sequence_output=True)
-        bidirectional_output = tf.nn.dropout(bidirectional_output, keep_prop)
+        if self.is_training:
+            bidirectional_output = tf.nn.dropout(bidirectional_output, keep_prop)
 
         output = util.add_lstm_layer(bidirectional_output,
                                      lengths,
                                      config.num_units * 2,
                                      config.batch_size, sequence_output=False)
-        output = tf.nn.dropout(output, keep_prop)
+        if self.is_training:
+            output = tf.nn.dropout(output, keep_prop)
 
         logits = util.add_fully_connected_layer(output,
                                                 config.num_units * 2,
@@ -160,4 +146,10 @@ class ModelStep3:
                     summary_writer.add_summary(val_loss, step)
                     summary_writer.add_summary(summary, step)
 
+            print()  # New line after steps counter
             self.saver.save(sess, checkpoint_file)
+
+    def restore(self, sess):
+        checkpoint_path = self.logdir + "checkpoints/"
+        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+        self.saver.restore(sess, latest_checkpoint)

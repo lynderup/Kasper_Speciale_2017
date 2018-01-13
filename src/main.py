@@ -14,7 +14,7 @@ step1_config = joint_model.StepConfig(batch_size=10,
                                       decay_steps=10,
                                       decay_rate=0.99,
                                       num_units=50,  # 50
-                                      train_steps=100,  # 1000
+                                      train_steps=1000,  # 1000
                                       keep_prop=0.5,
                                       l2_beta=0.001)
 
@@ -25,9 +25,9 @@ step3_config = joint_model.StepConfig(batch_size=50,
                                       decay_steps=50,
                                       decay_rate=0.99,
                                       num_units=50,  # 50
-                                      train_steps=1000,
+                                      train_steps=200,
                                       keep_prop=0.5,
-                                      l2_beta=0.05)
+                                      l2_beta=0.01)
 
 model_config = joint_model.ModelConfig(step1_config=step1_config, step3_config=step3_config)
 
@@ -67,9 +67,9 @@ def compare_datasets():
 
         runs = []
         for _ in range(3):
-            m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider, should_step3=False)
+            m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
-            m.train()
+            m.train_step1()
             runs.append(m.inference())
 
         decoded_runs = []
@@ -86,11 +86,11 @@ def test():
     statistics = Statistics()
 
     logdir = "test/"
-    # trainset = ["opm_set1", "opm_set2", "opm_set3"]
-    trainset = ["opm_set1", "opm_set2"]
+    trainset = ["opm_set1", "opm_set2", "opm_set3"]
+    # trainset = ["opm_set1", "opm_set2"]
     # trainset = ["opm_set1", "opm_set2", "pdbtm_set1", "pdbtm_set2"]
-    # validationset = testset = ["opm_set4"]
-    validationset = testset = ["opm_set3"]
+    validationset = testset = ["opm_set4"]
+    # validationset = testset = ["opm_set3"]
 
     dataprovider = joint_dataprovider.Dataprovider(trainset=trainset,
                                                    validationset=validationset,
@@ -100,27 +100,36 @@ def test():
     for i in range(1):
         m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
-        m.build_step1(logdir=logdir + "step1/continue_test/")
-        m.build_step3(logdir=logdir + "step3/continue_test/")
+        # m.build_step1(logdir=logdir + "step1/test_model/")
+        # m.build_step3(logdir=logdir + "step3/test_model/")
 
-        m.train()
-        m.train_step3()
 
-        runs.append(m.inference())
+        step1_logdir = m.train_step1()
+        step3_logdir = m.train_step3()
+
+        # step1_logdir = logdir + "step1/test_model/"
+        # step3_logdir = logdir + "step3/test_model/"
+        runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 
     step1_predictions = []
     step2_predictions = []
+    step3_predictions = []
 
-    for set_lengths, set_inputs, set_targets, set_predictions in runs:
+    for set_lengths, set_inputs, set_targets, set_predictions, set_step2_predictions, set_step3_predictions in runs:
         predictions = zip(set_lengths, set_inputs, set_targets, set_predictions)
         step1_predictions.append(decoder.decode_step123(predictions))
 
-        corrected_predictions = util.numpy_step2(set_predictions)
-        predictions = zip(set_lengths, set_inputs, set_targets, corrected_predictions)
+        predictions = zip(set_lengths, set_inputs, set_targets, set_step2_predictions)
         step2_predictions.append(decoder.decode_step123(predictions))
+
+        if len(set_step3_predictions) > 0:
+            predictions = zip(set_lengths, set_inputs, set_targets, set_step3_predictions)
+            step3_predictions.append(decoder.decode_step123(predictions))
 
     statistics.add_model(("Step1", step1_predictions))
     statistics.add_model(("Step2", step2_predictions))
+    if len(step3_predictions) > 0:
+        statistics.add_model(("Step3", step3_predictions))
 
     statistics.print_predictions()
     statistics.print_statistics()

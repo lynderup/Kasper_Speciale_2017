@@ -2,6 +2,7 @@ import os
 
 import dataprovider.dataprovider_step1
 import dataprovider.dataprovider_step3
+import dataprovider.test_dataprovider
 
 from dataprovider.utils.download_dataset import download_dataset
 from dataprovider.utils.fasta_to_tfrecord_converter import fasta_to_tfrecord
@@ -30,8 +31,7 @@ class Dataprovider:
         step1_data = dataprovider.dataprovider_step1.DataproviderStep1(path=self.dataset_path)
         step1_data.initilize_datasets(batch_size=batch_size,
                                       trainset=self.trainset,
-                                      validationset=self.validationset,
-                                      testset=self.testset)
+                                      validationset=self.validationset)
         return step1_data
 
     def get_step3_dataprovider(self, batch_size):
@@ -40,6 +40,12 @@ class Dataprovider:
                                       trainset=self.trainset,
                                       validationset=self.validationset)
         return step3_data
+
+    def get_test_dataprovider(self, batch_size):
+        test_data = dataprovider.test_dataprovider.DataproviderTest(path=self.dataset_path)
+        test_data.initilize_datasets(batch_size=batch_size,
+                                     testset=self.testset)
+        return test_data
 
 
 def download_and_convert_if_not_existing():

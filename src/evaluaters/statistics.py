@@ -124,7 +124,7 @@ class Statistics:
         self.models = []
 
         self.evaluators.append(("Endpoint below 5", compare_prediction.endpoints_diff_below_5_overlap_over_50_percent))
-        self.evaluators.append(("Overlap 25%", compare_prediction.overlap_over_25_percent))
+        # self.evaluators.append(("Overlap 25%", compare_prediction.overlap_over_25_percent))
 
         self.multiple_evaluators = []
 
@@ -155,6 +155,12 @@ class Statistics:
 
         latex_tables = latexify_tables(single_evaluator_tables)
         string_tables = stringify_tables(single_evaluator_tables)
+
+        for table in latex_tables:
+            print(table)
+
+        for table in string_tables:
+            print(table)
 
         multiple_evaluator_tables = []
         for table_name, evaluators in self.multiple_evaluators:
