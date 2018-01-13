@@ -41,7 +41,7 @@ default_step3_config = StepConfig(batch_size=50,
                                   decay_steps=50,
                                   decay_rate=0.99,
                                   num_units=50,  # 50
-                                  train_steps=10000,
+                                  train_steps=1000,
                                   keep_prop=0.5,
                                   l2_beta=0.05)
 

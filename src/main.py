@@ -145,7 +145,7 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    # test()
     # compare_datasets()
-    # hyper_params_search.do_hyper_params_search()
+    hyper_params_search.do_hyper_params_search()
     # cross_validation.do_3_fold_cross_validation()

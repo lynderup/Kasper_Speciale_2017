@@ -21,8 +21,13 @@ def do_3_fold_cross_validation(config=None, logdir=None):
                                                        validationset=validationset,
                                                        testset=testset)
 
-        m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider, should_step3=False)
+        m = joint_model.Model(logdir=logdir, config=config, dataprovider=dataprovider)
 
-        m.train()
-        runs.append(m.inference())
+        # step1_logdir = m.train_step1()
+        step3_logdir = m.train_step3()
+
+        step1_logdir = "test/step1/test_model/"
+        # step3_logdir = logdir + "step3/test_model/"
+        runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
+
     return runs
