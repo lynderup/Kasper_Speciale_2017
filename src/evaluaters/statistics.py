@@ -2,6 +2,36 @@ import evaluaters.compare_prediction as compare_prediction
 import numpy as np
 
 
+def latexify_char_table(table):
+    latex_tables = []
+
+    for table_name, table in tables:
+        latex_rows = ["%s \n" % table_name,
+                      "\\begin{tabular}{l|c|c} \n",
+                      "Model & Precision & Recall \\\\ \\hline \n"]
+
+        for row in table:
+            latex_rows.append("%s & $%.0f \\pm %.0f$ & $%.0f \\pm %.0f$ \\\\ \n" % row)
+
+        latex_rows.append("\\end{tabular}")
+
+        latex_tables.append("".join(latex_rows))
+
+    return latex_tables
+
+
+def stringify_char_table(table):
+    table_name, rows = table
+
+    string_rows = ["%s \n" % table_name,
+                   "\t  |  Precision |    Recall \n"]
+
+    for row in rows:
+        string_rows.append("%s | %.0f\u00B1%.0f | %.0f\u00B1%.0f | %.0f\u00B1%.0f \n" % row)
+
+    return "".join(string_rows)
+
+
 def latexify_tables(tables):
     latex_tables = []
 
@@ -125,6 +155,7 @@ class Statistics:
 
         self.evaluators.append(("Endpoint below 5", compare_prediction.endpoints_diff_below_5_overlap_over_50_percent))
         # self.evaluators.append(("Overlap 25%", compare_prediction.overlap_over_25_percent))
+        self.evaluators.append(("Char", "char_compare"))
 
         self.multiple_evaluators = []
 
@@ -157,10 +188,14 @@ class Statistics:
         string_tables = stringify_tables(single_evaluator_tables)
 
         for table in latex_tables:
+            print()
             print(table)
+            print()
 
         for table in string_tables:
+            print()
             print(table)
+            print()
 
         multiple_evaluator_tables = []
         for table_name, evaluators in self.multiple_evaluators:
@@ -178,10 +213,48 @@ class Statistics:
         latex_tables = latexify_multiple_evaluators_tables(multiple_evaluator_tables)
 
         for table in latex_tables:
+            print()
             print(table)
+            print()
 
         for table in string_tables:
+            print()
             print(table)
+            print()
+
+        # # Char based compare
+        # rows = []
+        # for model_name, runs in self.models:
+        #     acs = []
+        #     sns = []
+        #     sps = []
+        #
+        #     for run in runs:
+        #
+        #         ac, sn, sp = compare_prediction.char_compare(run)
+        #
+        #         acs.append(ac)
+        #         sns.append(sn)
+        #         sps.append(sp)
+        #
+        #     ac_mean = np.mean(acs)
+        #     ac_std = np.std(acs)
+        #
+        #     sn_mean = np.mean(sns)
+        #     sn_std = np.std(sns)
+        #
+        #     sp_mean = np.mean(sps)
+        #     sp_std = np.std(sps)
+        #
+        #     rows.append((model_name, ac_mean, ac_std, sn_mean, sn_std, sp_mean, sp_std))
+        #
+        # string_table = stringify_char_table(("Char", rows))
+        # # latex_table = latexify_char_table(("Char", rows))
+        #
+        # print()
+        # print(string_table)
+        # print()
+
 
     # Assumes predictions in same order in all added models
     def print_predictions(self):

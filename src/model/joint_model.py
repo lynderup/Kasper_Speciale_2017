@@ -208,7 +208,7 @@ class Model:
         tf.reset_default_graph()
 
         if logdir is None:
-            logdir = make_logdir(self.logdir + "step1/", self.config.step1_config)
+            logdir = make_logdir(self.logdir + "step3/", self.config.step1_config)
 
         model_step3 = self.build_step3(logdir)
 
@@ -235,6 +235,7 @@ class Model:
         set_targets = []
         set_predictions = []
 
+        start = time.time()
         step1_test_data, test_dataprovider = self.build_test_data_input()
         handle, lengths, sequences, sequence_sup_data, structures_step1 = step1_test_data
 
@@ -272,8 +273,13 @@ class Model:
             except tf.errors.OutOfRangeError:
                 pass
 
-        corrected_predictions = util.numpy_step2(set_predictions)
+        step1_time = time.time() - start
 
+        start = time.time()
+        corrected_predictions = util.numpy_step2(set_predictions)
+        step2_time = time.time() - start
+
+        start_time = time.time()
         if step3_logdir is not None:
 
             # Test data input
@@ -341,5 +347,10 @@ class Model:
         else:
             predictions = (set_lengths, set_inputs, set_targets, set_predictions, corrected_predictions, [])
         # predictions = zip(set_lengths, set_inputs, set_targets, set_predictions)
+
+        step3_time = time.time() - start_time
+        print("Inference time for step 1: %s" % step1_time)
+        print("Inference time for step 2: %s" % step2_time)
+        print("Inference time for step 3: %s" % step3_time)
 
         return predictions

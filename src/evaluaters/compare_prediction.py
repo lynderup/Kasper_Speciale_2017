@@ -1,6 +1,8 @@
 import dataprovider.mappings as mappings
 import decoder.decoder as decoder
 
+import evaluaters.compare_tm_pred as compare_char
+
 
 def endpoints_diff_below_5_overlap_over_50_percent(start_diff, end_diff, overlap, longest):
     return start_diff <= 5 and end_diff <= 5 and overlap * 2 >= longest
@@ -70,6 +72,10 @@ def compare_prediction(name, true, pred, measurement):
 
 
 def compare_predictions(predictions, measurement, should_print=False):
+
+    if measurement == "char_compare":
+        return char_compare(predictions)
+
     number_of_correct_predictions = 0
     number_of_predicted_tmh = 0
     number_of_observed_tmh = 0
@@ -91,5 +97,26 @@ def compare_predictions(predictions, measurement, should_print=False):
     else:
         # There should always be observed tmh
         recall = 1
+
+    return precision, recall
+
+
+def to_dictionary(predictions):
+    true = {}
+    pred = {}
+
+    for i, (name, xs, zs, prediction) in enumerate(predictions):
+        true[i] = "%s # %s" % (xs, zs)
+        pred[i] = "%s # %s" % (xs, prediction)
+
+    return true, pred
+
+
+def char_compare(predictions):
+    true, pred = to_dictionary(predictions)
+
+    ac, sn, sp = compare_char.do_compare(true, pred, False)
+    precision = sp
+    recall = sn
 
     return precision, recall

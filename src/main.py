@@ -6,6 +6,7 @@ import model.util as util
 import decoder.decoder as decoder
 import model.hyper_params_search as hyper_params_search
 import model.cross_validation as cross_validation
+import hmm.hmm_main as hmm
 
 from evaluaters.statistics import Statistics
 
@@ -20,16 +21,27 @@ step1_config = joint_model.StepConfig(batch_size=10,
                                       keep_prop=0.5,
                                       l2_beta=0.001)
 
+# step3_config = joint_model.StepConfig(batch_size=50,
+#                                       num_input_classes=20,
+#                                       num_output_classes=2,
+#                                       starting_learning_rate=0.01,
+#                                       decay_steps=50,
+#                                       decay_rate=0.99,
+#                                       num_units=50,  # 50
+#                                       train_steps=200,
+#                                       keep_prop=0.5,
+#                                       l2_beta=0.01)
+
 step3_config = joint_model.StepConfig(batch_size=50,
                                       num_input_classes=20,
                                       num_output_classes=2,
-                                      starting_learning_rate=0.01,
+                                      starting_learning_rate=0.1,
                                       decay_steps=50,
-                                      decay_rate=0.99,
-                                      num_units=50,  # 50
-                                      train_steps=200,
+                                      decay_rate=0.96,
+                                      num_units=20,
+                                      train_steps=500,
                                       keep_prop=0.5,
-                                      l2_beta=0.01)
+                                      l2_beta=1.0)
 
 model_config = joint_model.ModelConfig(step1_config=step1_config, step3_config=step3_config)
 
@@ -106,15 +118,16 @@ def test():
         # m.build_step3(logdir=logdir + "step3/test_model/")
 
         start = time.time()
-        step1_logdir = m.train_step1()
+        # step1_logdir = m.train_step1()
         step1_train_time = time.time() - start
 
         start = time.time()
-        step3_logdir = m.train_step3()
+        # step3_logdir = m.train_step3()
         step3_train_time = time.time() - start
 
-        # step1_logdir = logdir + "step1/test_model/"
-        # step3_logdir = logdir + "step3/test_model/"
+        step1_logdir = "test/step1/test_model/"
+        # step3_logdir = "test/step3/test_model/"
+        step3_logdir = None
         runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 
     step1_predictions = []
@@ -137,15 +150,18 @@ def test():
     if len(step3_predictions) > 0:
         statistics.add_model(("Step3", step3_predictions))
 
-    statistics.print_predictions()
-    statistics.print_statistics()
+    print("Training time for step 1: %s" % step1_train_time)
+    print("Training time for step 3: %s" % step3_train_time)
 
-    print(step1_train_time)
-    print(step3_train_time)
+    hmm_runs = hmm.do_hmm()
+    statistics.add_model(("HMM", hmm_runs))
+
+    # statistics.print_predictions()
+    statistics.print_statistics()
 
 
 if __name__ == '__main__':
-    # test()
+    test()
     # compare_datasets()
-    hyper_params_search.do_hyper_params_search()
+    # hyper_params_search.do_hyper_params_search()
     # cross_validation.do_3_fold_cross_validation()
