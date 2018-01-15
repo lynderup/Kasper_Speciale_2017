@@ -2,16 +2,17 @@
 
 \subsection{Results}
 
+
 \begin{table}
 	\centering 
 	\begin{tabular}{l|c|c}
 		Model & Precision & Recall \\ \hline
-		Step1 w/o PSSMs & $81 \pm 0$ & $83 \pm 0$ \\
-		Step1 w PSSMs & $81 \pm 0$ & $83 \pm 0$ \\
-		Step2 w/o PSSMs & $81 \pm 0$ & $82 \pm 0$ \\
-		Step2 w PSSMs & $81 \pm 0$ & $82 \pm 0$ \\
-		Step3 w/o PSSMs & $73 \pm 0$ & $84 \pm 0$ \\
-		Step3 w PSSMs & $73 \pm 0$ & $84 \pm 0$ \\
+		Step1 w/o PSSMs & $79 \pm 2$ & $84 \pm 2$ \\
+		Step1 w PSSMs   & $82 \pm 0$ & $85 \pm 1$ \\
+		Step2 w/o PSSMs & $80 \pm 2$ & $84 \pm 2$ \\
+		Step2 w PSSMs   & $82 \pm 1$ & $85 \pm 1$ \\
+		Step3 w/o PSSMs & $78 \pm 4$ & $80 \pm 7$ \\
+		Step3 w PSSMs   & $81 \pm 4$ & $70 \pm 8$ \\
 		HMM & $72 \pm 0$ & $31 \pm 0$ \\
 	\end{tabular}
 	\caption{Precision and recall for the position based measurement.}
@@ -23,7 +24,8 @@ Table \ref{tab:char}. The model gives a moderately improvement to precision
 in comparison with the \gls{hmm} and a massively improvement to recall.
 Step 2 and 3 does almost nothing for the result. This is because the changes
 they do is only a tiny part of all positions and therefore have little to 
-no impact on the result of this measurement. 
+no impact on the result of this measurement. The use of \glspl{pssm} 
+gives a little better results and a little less standard deviation. 
 
 \begin{table}
 	\centering 
@@ -31,27 +33,27 @@ no impact on the result of this measurement.
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{10\%}& \multicolumn{2}{|c}{25\%}& \multicolumn{2}{|c}{50\%}& \multicolumn{2}{|c}{75\%}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step 1 & $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\ 
-			w PSSMs& $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\
-			Step 2 & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
-			w PSSMs& $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
-			Step 3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\
-			w PSSMs& $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\  
+			Step 1  & $ 89 \pm 2 $ & $ 90 \pm 3 $ & $ 87 \pm 2 $ & $ 88 \pm 3 $ & $ 80 \pm 2 $ & $ 81 \pm 4 $ & $ 59 \pm 4 $ & $ 60 \pm 5 $ \\
+			w PSSMs & $ 88 \pm 3 $ & $ 92 \pm 1 $ & $ 87 \pm 3 $ & $ 91 \pm 1 $ & $ 80 \pm 3 $ & $ 84 \pm 2 $ & $ 59 \pm 2 $ & $ 62 \pm 3 $ \\
+			Step 2  & $ 93 \pm 1 $ & $ 94 \pm 3 $ & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 86 \pm 2 $ & $ 87 \pm 3 $ & $ 63 \pm 5 $ & $ 64 \pm 5 $ \\
+			w PSSMs & $ 92 \pm 1 $ & $ 98 \pm 2 $ & $ 91 \pm 0 $ & $ 97 \pm 1 $ & $ 86 \pm 1 $ & $ 92 \pm 2 $ & $ 64 \pm 4 $ & $ 68 \pm 4 $ \\
+			Step 3  & $ 93 \pm 1 $ & $ 92 \pm 5 $ & $ 91 \pm 1 $ & $ 90 \pm 5 $ & $ 83 \pm 4 $ & $ 82 \pm 7 $ & $ 51 \pm 14$ & $ 51 \pm 16$ \\
+			w PSSMs& $ 92 \pm 1 $ & $ 95 \pm 4 $ & $ 89 \pm 2 $ & $ 93 \pm 3 $ & $ 75 \pm 8 $ & $ 77 \pm 7 $ & $ 28 \pm 14$ & $ 28 \pm 13$ \\
 		\end{tabular}
 		\caption{Precision and recall for 10\%, 25\%, 50\% and 75\% overlap of true \gls{tmh} and predicted \gls{tmh}.}
 		\label{tab:overlap}
 	\end{subtable}
-	
+
 	\begin{subtable}[]{\textwidth}
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{Below 10}& \multicolumn{2}{|c}{Below 5}& \multicolumn{2}{|c}{Below 2}& \multicolumn{2}{|c}{Equal 0}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step 1 & $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
-			w PSSMs& $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
-			Step 2 & $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
-			w PSSMs& $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
-			Step 3 & $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
-			w PSSMs& $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\
+			Step 1  & $ 78 \pm 3 $ & $ 79 \pm 4 $ & $ 60 \pm 4 $ & $ 61 \pm 5 $ & $ 24 \pm 2 $ & $ 24 \pm 2 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
+			w PSSMs & $ 78 \pm 2 $ & $ 82 \pm 1 $ & $ 62 \pm 1 $ & $ 65 \pm 2 $ & $ 26 \pm 2 $ & $ 28 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\
+			Step 2  & $ 85 \pm 3 $ & $ 85 \pm 3 $ & $ 65 \pm 5 $ & $ 65 \pm 5 $ & $ 25 \pm 2 $ & $ 26 \pm 2 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
+			w PSSMs & $ 85 \pm 1 $ & $ 90 \pm 1 $ & $ 67 \pm 3 $ & $ 71 \pm 3 $ & $ 29 \pm 3 $ & $ 30 \pm 3 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\
+			Step 3  & $ 82 \pm 3 $ & $ 81 \pm 6 $ & $ 54 \pm 11$ & $ 54 \pm 13$ & $ 19 \pm 9 $ & $ 19 \pm 9 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\
+			w PSSMs & $ 77 \pm 3 $ & $ 80 \pm 4 $ & $ 39 \pm 10$ & $ 40 \pm 9 $ & $ 10 \pm 7 $ & $ 10 \pm 7 $ & $  0 \pm 0 $ & $  0 \pm 0 $ \\
 		\end{tabular}
 		\caption{Precision and recall for endpoints difference between true 
 			\gls{tmh} and predicted \gls{tmh} below or equal to 10, 5, 2 and 0.}
@@ -70,8 +72,8 @@ overlap is very small and within one standard deviation from each other,
 this is implying to that if the model have made a prediction it has more than 
 $25\%$ or less than $10\%$ overlap with a true \gls{tmh}.
 Table \ref{tab:endpoint} shows that the changing the endpoint requirement a little 
-gives a big difference in the result, from a precision on $84 \pm 2$ for an endpoints 
-difference up to $10$ to a precision on $2 \pm 1$ for no endpoints difference.
+gives a big difference in the result, from a precision on $85 \pm 1$ for an endpoints 
+difference up to $10$ to a precision on $1 \pm 1$ for no endpoints difference.
 Both precision and recall is very low if the requirement for a predicted \gls{tmh}
 to be correct is that there is no difference in the endpoints, ie. the prediction 
 is $100\%$ correct, which means there are almost no $100\%$ correct predictions.
@@ -79,11 +81,17 @@ From both measurement types can it be seen that step 2 helps a lot on especial
 the precision. This is because it removes a lot of small \glspl{tmh} from the 
 prediction that does not correspond to real \glspl{tmh}, these small predicted 
 \glspl{tmh} was lowering the precision but don't have much impact on the recall.
-The results from step 3 is not very good, it doesn't change the result for 
-$10\%$ and $25\%$ overlap, but it is still slightly worse than step 2. 
-For $50\%$ overlap and endpoints difference below 5 and 10, it considerable lowers
-both precision and recall and for $75\%$ overlap and endpoints difference below 
-2, step 3 almost halve the results. The increasing impact step 3 has on the 
+Here it also seems to give a little better results by using \glspl{pssm}
+for step 1 and consequently step2 and also lowers the standard deviation a little,
+But for step 3 it gives worse results to use \glspl{pssm}, but still mostly lowers 
+the standard deviation a little. For $75\%$ overlap and endpoints difference below 
+2 it even halves the result, but these have a high standard deviation.
+The results from step 3 is in general not very good, it doesn't change the result for 
+$10\%$ and $25\%$ overlap much, but for $50\%$ overlap and endpoints difference 
+below 10 it get slightly worse than step 2 and for $75\%$ overlap and endpoints 
+difference below 5 it considerable lowers both precision and recall
+and for endpoints difference below 
+2, step 3 almost halves the results. The increasing impact step 3 has on the 
 result as the requirement for the predictions gets stricter, is because step 3 
 can only move the endpoints 6 positions and 6 positions don't have much impact 
 if a prediction only has to have $10\%$ overlap but have a very large impact 
@@ -103,12 +111,12 @@ model.
 	\centering 
 	\begin{tabular}{l|c|c} 
 		Model & Precision & Recall \\ \hline
-		Step 1 & $64 \pm 3$ & $66 \pm 4$ \\ 
-		w PSSMs& $64 \pm 3$ & $66 \pm 4$ \\
-		Step 2 & $67 \pm 3$ & $69 \pm 3$ \\ 
-		w PSSMs& $67 \pm 3$ & $69 \pm 3$ \\
-		Step 3 & $49 \pm 3$ & $49 \pm 4$ \\
-		w PSSMs& $49 \pm 3$ & $49 \pm 4$ \\
+		Step 1 & $60 \pm 4$ & $61 \pm 5$ \\
+		w PSSMs& $62 \pm 1$ & $65 \pm 2$ \\
+		Step 2 & $65 \pm 5$ & $65 \pm 5$ \\
+		w PSSMs& $67 \pm 3$ & $71 \pm 3$ \\
+		Step 3 & $54 \pm 11$ & $54 \pm 13$ \\
+		w PSSMs& $39 \pm 10$ & $40 \pm 9$ \\
 		HMM   & $34 \pm 0$ & $13 \pm 0$ \\ 
 		TMSEG\cite{tmseg} & $87 \pm 3$ & $84 \pm 3$
 	\end{tabular}
@@ -120,7 +128,9 @@ In Table \ref{tab:pr50} is the precision and recall from using the same
 measurement as used by TMSEG. It also shows how the model compares with 
 other models. TMSEG is a lot better at both precision and recall, 
 but the model is a big improvement to the simple \gls{hmm}
-based model. 
+based model. As before gives the use af step 3 a worse result than stopping
+after step 2 and the best result is from step 2 where \glspl{pssm} was 
+used, where it gives a precision of $67 \pm 3$ and a recall of $71 \pm 3$.
 
 \subsection{Running time}
 \label{sec:time}
@@ -163,10 +173,49 @@ it is not much slower.
 \subsection{Discussion}
 % What have we achieved? 
 % Further work for it to be even better. 
-
 %\subsection{Learning what the Model has Learned}
 % Can we learn something from what the model has learn. By somehow visualising the weight matrices we can
 % se what the model has found to be importen and sometimes something interresting aboubt the problem can be learned
+Tensorflow was very easy, after getting used to build a computation graph and 
+then running it, to use to make the implementations of both machine learning models,
+but was very bad at other part of the model because it was very cumbersome 
+to make loops, branches and other normal control flow computations.
+It works very good at linear algebra as it was designed to but not 
+really at any thing else and is therefore a tool that only should be used
+at the thing it was designed to and not every problem.
+
+The layout of the model used here is almost the simplest that is needed to
+get a model based on a \gls{lstm} to work. It is very small, 50 units in each 
+directions in the bidirectional layer and 100 units in the forward layer 
+on top of that, compared to the 8192 units used for each \gls{lstm} layer 
+used in \cite{JozefowiczEtAl}. The layer was also shallow with only
+two \gls{lstm} layers compared to 16 layers used in \cite{WuEtAl}.
+Despite the small size of the model it gives fairly good results,
+a lot better than a simple \gls{hmm}, but not as good as TMSEG,
+so it may be possible to get results comparable to TMSEG with a bigger and 
+more complicated \gls{lstm} based model. Even this small model uses a lot of 
+time for training as shown in Section \ref{sec:time} and the training time
+gets a lot bigger with a bigger network. For the 16 layers model used in 
+\cite{WuEtAl} they use 96 GPUs for 6 days to train, so the large models is 
+only feasible to train with access to clusters of specialized hardware,
+but once trained they are much faster on inference on new data.
+To take advantages of large model, large datasets is an advantages
+and the datasets with annotated \glspl{tmp} are not that large, 
+so it might not even give better results using a larger network 
+with the dataset used here. There exists techniques to make a dataset larger
+without making new observation by copying existing examples and introducing 
+errors and noise that is similar to what might exists in real examples,
+this also have the advantages to make the model more robust against noise 
+in the data. 
+
+Even with all the data as used by TMSEG accessible, the model doesn't
+seem to be able to learn as much from the raw data as TMSEG is able
+to learn from the carefully extracted features, this could be because
+the model is not large enough or the dataset large enough to be able to 
+learn the more concealed patterns that is more easily learned from extracted
+features, but it could also be that a \gls{lstm} is simply not able to learn 
+them although I find that unlikely. I definitely find that the result found
+here shows potential for \gls{lstm} based model for \gls{tmp} prediction.
 
 \subsection{Further Work}
 The model does not predict the topology of the structure, i.e. which 

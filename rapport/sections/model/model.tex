@@ -39,7 +39,7 @@ In many \gls{ann} based models it is very hard to ensure some syntax rules for t
 classes was \emph{\gls{tmh}}, \emph{inside} and \emph{outside}, then it should not be possible for a output sequence to contain 
 adjacent positions with one being inside and the other being outside or both ends of a \gls{tmh} to be on the 
 same side, but these rules cannot be ensured. If the problem is divided in sub problems in such a way that 
-the rules is in the way the problem is divided. This is what was done in TMSEG\cite{tmseg}, they divided 
+the rules is in the way the problem is divided. This is what was done in TMSEG \cite{tmseg}, they divided 
 the problem such that each sub-problem is more focused on one thing and most of the desired structure is 
 enforced in the design of the problem. They still do some post processing to constrain the output in certain ways, 
 signal peptides is only in the beginning and \glspl{tmh} is not too short, but this is much simpler than 
@@ -152,7 +152,8 @@ The embedding layer is a matrix that transform the input from discrete integers 
 this serves two purposes. The first and most important purpose is to embed the discrete input values 
 into a continues vector space. The input is integers from 0 to 19 corresponding to the amino acids, but 
 these are discrete and have no concept of distance. By embedding them into a continues vector space 
-a meaning is assigned to distance and the matrix can be altered by the training of the network, 
+it becomes possible to compute a distance between points,
+and the matrix can be altered by the training of the network, 
 the idea is the network learns to embed similar amino acids to similar regions in the vector space
 and with multiple dimension, different dimension could represent different measures for similarity. 
 The measures for similarity is not necessarily something that makes sense to a human but just whatever 
@@ -233,7 +234,7 @@ The library also adds a lot of modules that can be used together as blocks to fo
 computation graph. Most standard components of machine learning models, like different layer types, 
 loss functions, training algorithms and even multiple different implementations of \gls{lstm} cells.
 This gives the ability to concentrate on non standard parts of the model that is associated to the 
-problem instance and not the type of machine learning used.
+problem instance and not the type of machine learning used, like pre- and post-processing of in- and output.
 
 \subsection{Implementation}
 The Tensorflow api for Python is the most stable and complete, I have therefore chosen to use 
@@ -283,4 +284,9 @@ reason it is easy to implement \glspl{ann} in Tensorflow, but tasks like the fil
 step 2 and the generation of segments in step 3 cannot be expressed as linear algebra and is 
 therefore not as easy to implement with tensorflow. Most of the work of implementing the model
 therefore lies in these parts. 
+The code can be found on:
+\begin{verbatim}
+	https://github.com/lynderup/Kasper_Speciale_2017
+\end{verbatim}
+
 

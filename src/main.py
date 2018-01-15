@@ -16,11 +16,11 @@ step1_config = joint_model.StepConfig(batch_size=10,
                                       starting_learning_rate=0.01,
                                       decay_steps=10,
                                       decay_rate=0.99,
-                                      num_units=70,  # 50
+                                      num_units=50,  # 50
                                       train_steps=1000,  # 1000
                                       keep_prop=0.5,
                                       l2_beta=0.001,
-                                      use_pssm=True)
+                                      use_pssm=False)
 
 # step3_config = joint_model.StepConfig(batch_size=50,
 #                                       num_input_classes=20,
@@ -39,11 +39,11 @@ step3_config = joint_model.StepConfig(batch_size=50,
                                       starting_learning_rate=0.1,
                                       decay_steps=50,
                                       decay_rate=0.96,
-                                      num_units=40,
+                                      num_units=20,
                                       train_steps=500,
                                       keep_prop=0.5,
                                       l2_beta=1.0,
-                                      use_pssm=True)
+                                      use_pssm=False)
 
 model_config = joint_model.ModelConfig(step1_config=step1_config, step3_config=step3_config)
 

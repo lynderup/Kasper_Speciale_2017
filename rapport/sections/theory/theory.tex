@@ -90,13 +90,14 @@ and then have a layer on top of that to uses the information collected from both
 In practise it has been shown that it is increasing hard\cite{rnnLTD} to train a \gls{rnn} to 
 use information that has an increasing distance in the sequence. This is because the recurrent connection 
 is going throug the activation function in each time step and is therefore exhibiting the same vanishing 
-gradient problem that very deep feed-forward networks have. 
+gradient problem that very deep feed-forward networks have, which causes the network to not learn 
+any long term dependencies. 
 
 \subsection{Long Short-Term Memory Network}
 \label{sec:lstm}
 
 A number of different solution to the long-term dependency problem have been proposed and one of the most used
-is the \glsfirst{lstm}\cite{lstm}. This is a type of \gls{rnn} where the network function $A$ is more
+is the \glsfirst{lstm} \cite{lstm}. This is a type of \gls{rnn} where the network function $A$ is more
 complicated interaction of four layers, there is also introduced a new recurrent connection called 
 the cell-state, $C$. The function then becomes:
 
@@ -142,8 +143,9 @@ on the vector it governs.
 	\label{fig:lstm}
 \end{figure}
 
-This type of network does not have problem of learning long-term dependencies because the depth  
+This type of network does not have the problem of learning long-term dependencies because the depth  
 of activation functions from any input to any output is only two, once when the information is 
-added to the cell-state and once when the output is calculated. 
+added to the cell-state and once when the output is calculated, and the gradient is therefore 
+much more stable at longer distances in the network. 
 
 
