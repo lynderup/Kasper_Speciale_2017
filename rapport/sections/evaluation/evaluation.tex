@@ -173,5 +173,15 @@ The model does not predict the topology of the structure, i.e. which
 non-\gls{tmh} parts are inside the membrane and which parts are outside.
 Step 4 of TMSEG is the part of their model that does this and if I had more
 time was this the first improvement I would add to this model.
+Other interesting things to take a look at is other classes in the 
+structure like signal peptides and reentrant loops. 
+The model was also only trained to look at \glspl{tmp} and not 
+soluble proteins and can therefore not be used to discriminate 
+between those. This is something TMSEG does really well and 
+something I would have looked at if I had more time.
+For a more distant goal it could be interesting to examine other \gls{rnn}
+architectures to see if others was more suitable to the problem and
+if it was possible to improve the result by also using feature extraction.
+
 
 
