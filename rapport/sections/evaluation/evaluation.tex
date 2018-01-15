@@ -4,13 +4,39 @@
 
 \begin{table}
 	\centering 
+	\begin{tabular}{l|c|c}
+		Model & Precision & Recall \\ \hline
+		Step1 w/o PSSMs & $81 \pm 0$ & $83 \pm 0$ \\
+		Step1 w PSSMs & $81 \pm 0$ & $83 \pm 0$ \\
+		Step2 w/o PSSMs & $81 \pm 0$ & $82 \pm 0$ \\
+		Step2 w PSSMs & $81 \pm 0$ & $82 \pm 0$ \\
+		Step3 w/o PSSMs & $73 \pm 0$ & $84 \pm 0$ \\
+		Step3 w PSSMs & $73 \pm 0$ & $84 \pm 0$ \\
+		HMM & $72 \pm 0$ & $31 \pm 0$ \\
+	\end{tabular}
+	\caption{Precision and recall for the position based measurement.}
+	\label{tab:char}
+\end{table}
+
+The precision and recall for the position based measurement is shown in 
+Table \ref{tab:char}. The model gives a moderately improvement to precision
+in comparison with the \gls{hmm} and a massively improvement to recall.
+Step 2 and 3 does almost nothing for the result. This is because the changes
+they do is only a tiny part of all positions and therefore have little to 
+no impact on the result of this measurement. 
+
+\begin{table}
+	\centering 
 	\begin{subtable}[]{\textwidth}
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{10\%}& \multicolumn{2}{|c}{25\%}& \multicolumn{2}{|c}{50\%}& \multicolumn{2}{|c}{75\%}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
 			Step 1 & $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\ 
+			w PSSMs& $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\
 			Step 2 & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
-			Step 3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\ 
+			w PSSMs& $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
+			Step 3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\
+			w PSSMs& $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\  
 		\end{tabular}
 		\caption{Precision and recall for 10\%, 25\%, 50\% and 75\% overlap of true \gls{tmh} and predicted \gls{tmh}.}
 		\label{tab:overlap}
@@ -21,8 +47,11 @@
 			Model & \multicolumn{2}{|c}{Below 10}& \multicolumn{2}{|c}{Below 5}& \multicolumn{2}{|c}{Below 2}& \multicolumn{2}{|c}{Equal 0}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
 			Step 1 & $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			w PSSMs& $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
 			Step 2 & $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			w PSSMs& $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\
 			Step 3 & $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
+			w PSSMs& $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\
 		\end{tabular}
 		\caption{Precision and recall for endpoints difference between true 
 			\gls{tmh} and predicted \gls{tmh} below or equal to 10, 5, 2 and 0.}
@@ -35,7 +64,7 @@
 
 Table \ref{tab:step_compare} contains the result for different measurements 
 comparing the steps in the model. Unsurprising goes both the precision and the 
-recall down when the requirement for the predictions gets stronger. In 
+recall down when the requirement for the predictions gets stricter. In 
 Table \ref{tab:overlap} can it be seen that the difference between $10\%$ and $25\%$
 overlap is very small and within one standard deviation from each other, 
 this is implying to that if the model have made a prediction it has more than 
@@ -54,7 +83,7 @@ The results from step 3 is not very good, it doesn't change the result for
 $10\%$ and $25\%$ overlap, but it is still slightly worse than step 2. 
 For $50\%$ overlap and endpoints difference below 5 and 10, it considerable lowers
 both precision and recall and for $75\%$ overlap and endpoints difference below 
-2, step 3 approximately halve the results. The increasing impact step 3 has on the 
+2, step 3 almost halve the results. The increasing impact step 3 has on the 
 result as the requirement for the predictions gets stricter, is because step 3 
 can only move the endpoints 6 positions and 6 positions don't have much impact 
 if a prediction only has to have $10\%$ overlap but have a very large impact 
@@ -75,8 +104,11 @@ model.
 	\begin{tabular}{l|c|c} 
 		Model & Precision & Recall \\ \hline
 		Step 1 & $64 \pm 3$ & $66 \pm 4$ \\ 
+		w PSSMs& $64 \pm 3$ & $66 \pm 4$ \\
 		Step 2 & $67 \pm 3$ & $69 \pm 3$ \\ 
+		w PSSMs& $67 \pm 3$ & $69 \pm 3$ \\
 		Step 3 & $49 \pm 3$ & $49 \pm 4$ \\
+		w PSSMs& $49 \pm 3$ & $49 \pm 4$ \\
 		HMM   & $34 \pm 0$ & $13 \pm 0$ \\ 
 		TMSEG\cite{tmseg} & $87 \pm 3$ & $84 \pm 3$
 	\end{tabular}
@@ -137,3 +169,9 @@ it is not much slower.
 % se what the model has found to be importen and sometimes something interresting aboubt the problem can be learned
 
 \subsection{Further Work}
+The model does not predict the topology of the structure, i.e. which 
+non-\gls{tmh} parts are inside the membrane and which parts are outside.
+Step 4 of TMSEG is the part of their model that does this and if I had more
+time was this the first improvement I would add to this model.
+
+

@@ -23,7 +23,7 @@ different initial variables and order of batches.
 The trained model is therefore very sensitive to the initial assignment of 
 variables and the order the samples is used. It is therefore unlikely to get the same 
 result every time the model is trained and can have a very high variance. 
-Each experiment was therefore run ten times and the mean was used as result with 
+Each experiment was therefore run five times and the mean was used as result with 
 the standard deviation of these runs as error rates.
 
 
@@ -33,6 +33,11 @@ develop TMSEG. The dataset consists of four subsets with approximate the same di
 of different length of proteins. The fourth subset was omitted from the training and only 
 used to test the final model on. This was done to be sure that the model was not overfitted
 on the test set and that the model was generalizing to new data. 
+
+TMSEG used, in addition to the sequences, evolutionary information in 
+the form of \glspl{pssm} generated with 
+PSI-BLAST \cite{psi-blast}. I ran the experiments both with and without \glspl{pssm}
+as additional input, to ba able to compare the imparct of this additional information.
 
 \subsection{Training}
 \glspl{lstm} is fairly slow in terms of time, both for inference and especially to train.
