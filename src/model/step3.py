@@ -6,7 +6,7 @@ import model.util as util
 
 
 class ModelStep3:
-    def __init__(self, config, logdir, is_training, dataprovider, step3_data):
+    def __init__(self, config, logdir, is_training, dataprovider, handle, data_dict):
 
         self.config = config
         self.logdir = logdir
@@ -15,13 +15,13 @@ class ModelStep3:
 
         self.global_step = tf.Variable(0, trainable=False)
 
-        handle, lengths, sequences, sequence_sup_data, targets_step3 = step3_data
+        # handle, lengths, sequences, sequence_sup_data, targets_step3 = step3_data
 
         self.handle = handle
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
-            logits = self.build_model_step3(sequences, sequence_sup_data, lengths)
+            logits = self.build_model_step3(data_dict)
             self.logits_step3 = logits
 
         var_list_step3 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step3')
@@ -30,7 +30,7 @@ class ModelStep3:
         if is_training:
             # Build training graph step3
             with tf.variable_scope("Training", reuse=None):
-                cross_entropy_loss_step3 = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=targets_step3,
+                cross_entropy_loss_step3 = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=data_dict["targets"],
                                                                                           logits=logits)
                 cross_entropy_loss_step3 = tf.reduce_mean(cross_entropy_loss_step3)
 
@@ -41,20 +41,20 @@ class ModelStep3:
                 self.loss_step3 = loss_step3
                 self.train_step_step3 = train_step_step3
 
-    def build_model_step3(self, sequences, sequence_sup_data, lengths):
+    def build_model_step3(self, data_dict):
         config = self.config
 
         embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units - 3], dtype=tf.float32)
 
-        embedded_input = tf.nn.embedding_lookup(embedding, sequences)
-        embedded_input = tf.concat([embedded_input, sequence_sup_data], axis=2)
+        embedded_input = tf.nn.embedding_lookup(embedding, data_dict["sequences"])
+        embedded_input = tf.concat([embedded_input, data_dict["sequence_sup_data"]], axis=2)
         self.embedded_input = embedded_input
 
         keep_prop = tf.Variable(1, trainable=False, dtype=tf.float32, name="keep_prop")
         self.keep_prop = keep_prop
 
         bidirectional_output = util.add_bidirectional_lstm_layer(embedded_input,
-                                                                 lengths,
+                                                                 data_dict["lengths"],
                                                                  config.num_units,
                                                                  config.batch_size,
                                                                  sequence_output=True)
@@ -62,7 +62,7 @@ class ModelStep3:
             bidirectional_output = tf.nn.dropout(bidirectional_output, keep_prop)
 
         output = util.add_lstm_layer(bidirectional_output,
-                                     lengths,
+                                     data_dict["lengths"],
                                      config.num_units * 2,
                                      config.batch_size, sequence_output=False)
         if self.is_training:

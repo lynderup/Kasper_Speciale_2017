@@ -7,7 +7,7 @@ import model.util as util
 
 
 class ModelStep1:
-    def __init__(self, config, logdir, is_training, dataprovider, step1_data):
+    def __init__(self, config, logdir, is_training, dataprovider, handle, data_dict):
 
         self.config = config
         self.logdir = logdir
@@ -16,13 +16,11 @@ class ModelStep1:
 
         self.global_step = tf.Variable(0, trainable=False)
 
-        handle, lengths, sequences, sequence_sup_data, structures_step1 = step1_data
-
         self.handle = handle
 
         # Build model graph
         with tf.variable_scope("Model", reuse=None):
-            logits = self.build_model_step1(lengths, sequences, sequence_sup_data)
+            logits = self.build_model_step1(data_dict)
             self.logits_step1 = logits
 
         var_list_step1 = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Step1')
@@ -31,9 +29,9 @@ class ModelStep1:
         if is_training:
             # Build training graph step1
             with tf.variable_scope("Training", reuse=None):
-                cross_entropy_loss_step1 = tf.reduce_mean(util.sequence_cross_entropy(labels=structures_step1,
+                cross_entropy_loss_step1 = tf.reduce_mean(util.sequence_cross_entropy(labels=data_dict["targets"],
                                                                                       logits=logits,
-                                                                                      sequence_lengths=lengths))
+                                                                                      sequence_lengths=data_dict["lengths"]))
 
                 learning_rate, loss_step1, train_step_step1 = self.build_training_graph(cross_entropy_loss_step1,
                                                                                         var_list=var_list_step1,
@@ -42,26 +40,26 @@ class ModelStep1:
                 self.loss_step1 = loss_step1
                 self.train_step_step1 = train_step_step1
 
-    def build_model_step1(self, lengths, sequences, sequence_sup_data):
+    def build_model_step1(self, data_dict):
         config = self.config
 
         embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units - 3], dtype=tf.float32)
 
-        embedded_input = tf.nn.embedding_lookup(embedding, sequences)
-        embedded_input = tf.concat([embedded_input, sequence_sup_data], axis=2)
+        embedded_input = tf.nn.embedding_lookup(embedding, data_dict["sequences"])
+        embedded_input = tf.concat([embedded_input, data_dict["sequence_sup_data"]], axis=2)
         self.embedded_input = embedded_input
 
         keep_prop = tf.Variable(1, trainable=False, dtype=tf.float32, name="keep_prop")
         self.keep_prop = keep_prop
 
         bidirectional_output = util.add_bidirectional_lstm_layer(embedded_input,
-                                                                 lengths,
+                                                                 data_dict["lengths"],
                                                                  config.num_units,
                                                                  config.batch_size)
         if self.is_training:
             bidirectional_output = tf.nn.dropout(bidirectional_output, keep_prop)
 
-        output = util.add_lstm_layer(bidirectional_output, lengths, config.num_units * 2, config.batch_size)
+        output = util.add_lstm_layer(bidirectional_output, data_dict["lengths"], config.num_units * 2, config.batch_size)
         if self.is_training:
             output = tf.nn.dropout(output, keep_prop)
 

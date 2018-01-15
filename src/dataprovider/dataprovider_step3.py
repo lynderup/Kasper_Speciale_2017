@@ -43,15 +43,19 @@ def find_helices(step1_target, length):
     return helix_list
 
 
-def flat_map(length, sequence, sequence_sup_data, step1_target):
+def flat_map(name, length, sequence, sequence_sup_data, pssm, step1_target):
     def lambda_from_offsets(start_offset, size_offset, target):
-        return lambda helix: (helix[1] + size_offset,
+        return lambda helix: (name,
+                              helix[1] + size_offset,
                               tf.slice(sequence,
                                        [helix[0] + start_offset],
                                        [helix[1] + size_offset]),
                               tf.slice(sequence_sup_data,
                                        [helix[0] + start_offset, 0],
                                        [helix[1] + size_offset, 3]),
+                              tf.slice(pssm,
+                                       [helix[0] + start_offset, 0],
+                                       [helix[1] + size_offset, 20]),
                               target)
         # tf.slice(step1_target,
         #          [helix[0] + start_offset],
@@ -103,7 +107,7 @@ class DataproviderStep3:
         if repeat_shuffle:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=500)
-        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], []))
+        dataset = dataset.padded_batch(batch_size, padded_shapes=([], [], [None], [None, 3], [None, 20], []))
 
         return dataset
 

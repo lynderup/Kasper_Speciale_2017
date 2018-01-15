@@ -4,21 +4,26 @@ import dataprovider.mappings as mappings
 
 def parse_function(example_proto):
     context_features = {
-        "length": tf.FixedLenFeature([], dtype=tf.int64)
+        "length": tf.FixedLenFeature([], dtype=tf.int64),
+        "name": tf.FixedLenFeature([], dtype=tf.string)
     }
     sequence_features = {
         "sequence": tf.FixedLenSequenceFeature([], dtype=tf.int64),
-        "structure": tf.FixedLenSequenceFeature([], dtype=tf.int64)
+        "structure": tf.FixedLenSequenceFeature([], dtype=tf.int64),
+        "pssm": tf.FixedLenSequenceFeature([20], dtype=tf.int64)
     }
 
     context_parsed, sequence_parsed = tf.parse_single_sequence_example(serialized=example_proto,
                                                                        context_features=context_features,
                                                                        sequence_features=sequence_features)
     lengths = tf.cast(context_parsed["length"], tf.int32)
+    name = context_parsed["name"]
+
     sequence = sequence_parsed["sequence"]
     structure = sequence_parsed["structure"]
+    pssm = sequence_parsed["pssm"]
 
-    return lengths, sequence, structure
+    return name, lengths, sequence, structure, pssm
 
 
 class DataproviderStep1:
@@ -35,12 +40,13 @@ class DataproviderStep1:
     def get_table_init_op(self):
         return self.structure_to_step1_target_table.init
 
-    def structure_to_step_targets(self, lengths, sequence, structure):
+    def structure_to_step_targets(self, name, lengths, sequence, structure, pssm):
         step1_target = self.structure_to_step1_target_table.lookup(structure)
 
         sequence_sup_data = tf.nn.embedding_lookup(self.sequence_to_sup_data_dict_table, sequence)
+        pssm = tf.cast(pssm, tf.float32)
 
-        return lengths, sequence, sequence_sup_data, step1_target
+        return name, lengths, sequence, sequence_sup_data, pssm, step1_target
 
     def get_dataset(self, batch_size, filenames, repeat_shuffle=False, should_pad=True):
         filename_suffix = ".tfrecord"
@@ -53,7 +59,7 @@ class DataproviderStep1:
             dataset = dataset.repeat(None)  # Infinite iterations
             dataset = dataset.shuffle(buffer_size=1000)
         if should_pad:
-            dataset = dataset.padded_batch(batch_size, padded_shapes=([], [None], [None, 3], [None]))
+            dataset = dataset.padded_batch(batch_size, padded_shapes=([], [], [None], [None, 3], [None, 20], [None]))
 
         return dataset
 

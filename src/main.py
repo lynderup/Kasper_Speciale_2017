@@ -126,8 +126,8 @@ def test():
         step3_train_time = time.time() - start
 
         step1_logdir = "test/step1/test_model/"
-        # step3_logdir = "test/step3/test_model/"
-        step3_logdir = None
+        step3_logdir = "test/step3/test_model/"
+        # step3_logdir = None
         runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 
     step1_predictions = []

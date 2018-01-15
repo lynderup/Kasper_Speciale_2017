@@ -1,6 +1,4 @@
 
-
-
 def read_fasta(filename):
 
     with open(filename, "r") as file:

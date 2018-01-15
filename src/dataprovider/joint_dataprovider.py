@@ -1,5 +1,7 @@
 import os
 
+import tensorflow as tf
+
 import dataprovider.dataprovider_step1
 import dataprovider.dataprovider_step3
 import dataprovider.test_dataprovider
@@ -78,3 +80,42 @@ def download_and_convert_if_not_existing():
         os.makedirs(path + tfrecord_path)
         encoder = TMSEGEncoder()
         fasta_to_tfrecord(path, fasta_path, tfrecord_path, sets, encoder)
+
+
+def build_data_input_step1(dataprovider):
+    handle, iterator = dataprovider.get_iterator()
+    names, lengths, sequences, sequence_sup_data, pssm, structures_step1 = iterator.get_next()
+
+    #  TODO: Tensors in wrong shapes. Need fixing!!!
+    sequence_sup_data = tf.transpose(sequence_sup_data, perm=[1, 0, 2])
+    pssm = tf.transpose(pssm, perm=[1, 0, 2])
+    sequences = tf.transpose(sequences, perm=[1, 0])
+    structures_step1 = tf.transpose(structures_step1, perm=[1, 0])
+
+    data_dict = {"names": names,
+                 "lengths": lengths,
+                 "sequences": sequences,
+                 "sequence_sup_data": sequence_sup_data,
+                 "pssm": pssm,
+                 "targets": structures_step1}
+
+    return handle, data_dict
+
+if __name__ == '__main__':
+    data = Dataprovider()
+
+    step1_data = data.get_step1_dataprovider(1)
+
+    handle, data_dict = build_data_input_step1(step1_data)
+
+    with tf.Session() as sess:
+        sess.run(step1_data.get_table_init_op())
+
+        train_handle, _ = sess.run(step1_data.get_train_iterator_handle())
+        feed_dict = {handle: train_handle}
+
+        data = sess.run(data_dict, feed_dict=feed_dict)
+
+        for d in data:
+            print(d)
+            print(data[d])
