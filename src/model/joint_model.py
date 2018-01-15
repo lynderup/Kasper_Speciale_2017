@@ -21,7 +21,8 @@ StepConfig = namedtuple("StepConfig", ["batch_size",
                                        "num_units",
                                        "train_steps",
                                        "keep_prop",
-                                       "l2_beta"])
+                                       "l2_beta",
+                                       "use_pssm"])
 
 default_step1_config = StepConfig(batch_size=10,
                                   num_input_classes=20,
@@ -32,7 +33,8 @@ default_step1_config = StepConfig(batch_size=10,
                                   num_units=50,  # 50
                                   train_steps=1000,
                                   keep_prop=0.5,
-                                  l2_beta=0.001)
+                                  l2_beta=0.001,
+                                  use_pssm=True)
 
 default_step3_config = StepConfig(batch_size=50,
                                   num_input_classes=20,
@@ -43,7 +45,8 @@ default_step3_config = StepConfig(batch_size=50,
                                   num_units=50,  # 50
                                   train_steps=1000,
                                   keep_prop=0.5,
-                                  l2_beta=0.05)
+                                  l2_beta=0.05,
+                                  use_pssm=True)
 
 default_config = ModelConfig(step1_config=default_step1_config, step3_config=default_step3_config)
 
@@ -253,6 +256,7 @@ class Model:
         set_lengths = []
         set_inputs = []
         set_sup_data = []
+        set_pssm = []
         set_targets = []
         set_predictions = []
 
@@ -275,17 +279,19 @@ class Model:
             fetches = [test_data_dict["lengths"],
                        test_data_dict["sequences"],
                        test_data_dict["sequence_sup_data"],
+                       test_data_dict["pssm"],
                        test_data_dict["targets"],
                        logits_step1]
 
             try:
                 while True:
-                    _lengths, inputs, sup_data, targets_step1, out = sess.run(fetches=fetches, feed_dict=test_feed)
+                    _lengths, inputs, sup_data, _pssm, targets_step1, out = sess.run(fetches=fetches, feed_dict=test_feed)
 
                     # Switch sequence dimension with batch dimension so it is batch-major
                     batch_predictions = np.swapaxes(np.argmax(out, axis=2), 0, 1)
                     batch_inputs = np.swapaxes(inputs, 0, 1)
                     batch_sup_data = np.swapaxes(sup_data, 0, 1)
+                    batch_pssm = np.swapaxes(_pssm, 0, 1)
                     batch_targets = np.swapaxes(targets_step1, 0, 1)
 
                     # batch_corrected_predictions = util.numpy_step2(out)
@@ -293,6 +299,7 @@ class Model:
                     set_lengths.extend(_lengths)
                     set_inputs.extend(batch_inputs)
                     set_sup_data.extend(batch_sup_data)
+                    set_pssm.extend(batch_pssm)
                     set_targets.extend(batch_targets)
                     set_predictions.extend(batch_predictions)
             except tf.errors.OutOfRangeError:
@@ -334,8 +341,8 @@ class Model:
 
                 new_predictions = []
 
-                for length, sequence, sup_data, structure in zip(set_lengths, set_inputs, set_sup_data, corrected_predictions):
-                    helices_segments = util.numpy_step3_preprocess(length, sequence, sup_data, structure)
+                for length, sequence, sup_data, _pssm, structure in zip(set_lengths, set_inputs, set_sup_data, set_pssm, corrected_predictions):
+                    helices_segments = util.numpy_step3_preprocess(length, sequence, sup_data, _pssm, structure)
 
                     structure = np.copy(structure)
 
@@ -344,12 +351,13 @@ class Model:
                         start_before, end_before = helix_segments[0][0:2]
 
                         helix_probabilities = []
-                        for start, end, sequence_segment, sup_data_segment, structure_segment in helix_segments:
+                        for start, end, sequence_segment, sup_data_segment, pssm_segment, structure_segment in helix_segments:
                             segment_length = end - start
 
                             feed_dict = {lengths: [segment_length],
                                          sequences: [sequence_segment],
-                                         sequence_sup_data: [sup_data_segment]}
+                                         sequence_sup_data: [sup_data_segment],
+                                         pssm: [pssm_segment]}
 
                             fetches = logits_step3
 

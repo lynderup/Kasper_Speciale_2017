@@ -45,7 +45,7 @@ def find_helices(step1_target, length):
 
 def flat_map(name, length, sequence, sequence_sup_data, pssm, step1_target):
     def lambda_from_offsets(start_offset, size_offset, target):
-        return lambda helix: (name,
+        return lambda helix: ("",
                               helix[1] + size_offset,
                               tf.slice(sequence,
                                        [helix[0] + start_offset],

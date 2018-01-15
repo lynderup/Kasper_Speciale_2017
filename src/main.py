@@ -16,10 +16,11 @@ step1_config = joint_model.StepConfig(batch_size=10,
                                       starting_learning_rate=0.01,
                                       decay_steps=10,
                                       decay_rate=0.99,
-                                      num_units=50,  # 50
+                                      num_units=70,  # 50
                                       train_steps=1000,  # 1000
                                       keep_prop=0.5,
-                                      l2_beta=0.001)
+                                      l2_beta=0.001,
+                                      use_pssm=True)
 
 # step3_config = joint_model.StepConfig(batch_size=50,
 #                                       num_input_classes=20,
@@ -38,10 +39,11 @@ step3_config = joint_model.StepConfig(batch_size=50,
                                       starting_learning_rate=0.1,
                                       decay_steps=50,
                                       decay_rate=0.96,
-                                      num_units=20,
+                                      num_units=40,
                                       train_steps=500,
                                       keep_prop=0.5,
-                                      l2_beta=1.0)
+                                      l2_beta=1.0,
+                                      use_pssm=True)
 
 model_config = joint_model.ModelConfig(step1_config=step1_config, step3_config=step3_config)
 
@@ -111,22 +113,22 @@ def test():
                                                    testset=testset)
 
     runs = []
-    for i in range(1):
+    for i in range(5):
         m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
         # m.build_step1(logdir=logdir + "step1/test_model/")
         # m.build_step3(logdir=logdir + "step3/test_model/")
 
         start = time.time()
-        # step1_logdir = m.train_step1()
+        step1_logdir = m.train_step1()
         step1_train_time = time.time() - start
 
         start = time.time()
-        # step3_logdir = m.train_step3()
+        step3_logdir = m.train_step3()
         step3_train_time = time.time() - start
 
-        step1_logdir = "test/step1/test_model/"
-        step3_logdir = "test/step3/test_model/"
+        # step1_logdir = "test/step1/test_model/"
+        # step3_logdir = "test/step3/test_model/"
         # step3_logdir = None
         runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 

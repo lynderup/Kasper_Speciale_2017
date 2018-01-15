@@ -84,9 +84,10 @@ def numpy_step2(batch_predictions):
     return np.asarray(new_predictions)
 
 
-def numpy_step3_preprocess(sequence_length, sequence, sup_data, structure):
+def numpy_step3_preprocess(sequence_length, sequence, sup_data, pssm, structure):
     sequence = sequence[0:sequence_length]
     sup_data = sup_data[0:sequence_length]
+    pssm = pssm[0:sequence_length]
     structure = structure[0:sequence_length]
 
     helices = find_membranes_aux([structure])[0]
@@ -98,41 +99,48 @@ def numpy_step3_preprocess(sequence_length, sequence, sup_data, structure):
 
         sequence_segment = sequence[start:end]
         sup_data_segment = sup_data[start:end]
+        pssm_segment = pssm[start:end]
         structure_segment = structure[start:end]
-        helix_segments.append((start, end, sequence_segment, sup_data_segment, structure_segment))
+        helix_segments.append((start, end, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
         if length > 6:
             sequence_segment = sequence[start + 6:end]
             sup_data_segment = sup_data[start + 6:end]
+            pssm_segment = pssm[start + 6:end]
             structure_segment = structure[start + 6:end]
-            helix_segments.append((start + 6, end, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start + 6, end, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
             sequence_segment = sequence[start:end - 6]
             sup_data_segment = sup_data[start:end - 6]
+            pssm_segment = pssm[start:end - 6]
             structure_segment = structure[start:end - 6]
-            helix_segments.append((start, end - 6, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start, end - 6, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
         if start > 6:
             sequence_segment = sequence[start - 6:end]
             sup_data_segment = sup_data[start - 6:end]
+            pssm_segment = pssm[start - 6:end]
             structure_segment = structure[start - 6:end]
-            helix_segments.append((start - 6, end, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start - 6, end, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
             sequence_segment = sequence[start - 6:end - 6]
             sup_data_segment = sup_data[start - 6:end - 6]
+            pssm_segment = pssm[start - 6:end - 6]
             structure_segment = structure[start - 6:end - 6]
-            helix_segments.append((start - 6, end - 6, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start - 6, end - 6, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
         if end < sequence_length - 6:
             sequence_segment = sequence[start:end + 6]
             sup_data_segment = sup_data[start:end + 6]
+            pssm_segment = pssm[start:end + 6]
             structure_segment = structure[start:end + 6]
-            helix_segments.append((start, end + 6, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start, end + 6, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
             sequence_segment = sequence[start + 6:end + 6]
             sup_data_segment = sup_data[start + 6:end + 6]
+            pssm_segment = pssm[start + 6:end + 6]
             structure_segment = structure[start + 6:end + 6]
-            helix_segments.append((start + 6, end + 6, sequence_segment, sup_data_segment, structure_segment))
+            helix_segments.append((start + 6, end + 6, sequence_segment, sup_data_segment, pssm_segment, structure_segment))
 
         helices_segments.append(helix_segments)
 

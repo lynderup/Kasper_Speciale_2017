@@ -43,10 +43,21 @@ class ModelStep1:
     def build_model_step1(self, data_dict):
         config = self.config
 
-        embedding = tf.get_variable("embedding", [config.num_input_classes, config.num_units - 3], dtype=tf.float32)
+        if config.use_pssm:
+            embed_size_offset = 23
+        else:
+            embed_size_offset = 3
+
+        embedding = tf.get_variable("embedding",
+                                    [config.num_input_classes, config.num_units - embed_size_offset],
+                                    dtype=tf.float32)
 
         embedded_input = tf.nn.embedding_lookup(embedding, data_dict["sequences"])
         embedded_input = tf.concat([embedded_input, data_dict["sequence_sup_data"]], axis=2)
+
+        if config.use_pssm:
+          embedded_input = tf.concat([embedded_input, data_dict["pssm"]], axis=2)
+
         self.embedded_input = embedded_input
 
         keep_prop = tf.Variable(1, trainable=False, dtype=tf.float32, name="keep_prop")
