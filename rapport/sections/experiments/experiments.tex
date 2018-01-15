@@ -35,11 +35,12 @@ used to test the final model on. This was done to be sure that the model was not
 on the test set and that the model was generalizing to new data. 
 
 \subsection{Training}
-\glspl{lstm} is fairly slow in terms of time, both to inference and especially to train.
+\glspl{lstm} is fairly slow in terms of time, both for inference and especially to train.
 This is because \gls{lstm} layers needs lots of computations in comparison with ordinary 
 fully connected layers and most \glspl{ann} is already slow in comparison with many 
 other types of machine learning.
-\todo{maybe some timing test and comparison with HMM}
+To better be able to able to compare the running time of the model, I have done 
+some timings tests. The result of these test can be found in section \ref{sec:time}.
 
 Proper grid search of hyper-parameters is a very long process because the time it takes
 scales exponential in the number of different hyper-parameters and the model has a lot 

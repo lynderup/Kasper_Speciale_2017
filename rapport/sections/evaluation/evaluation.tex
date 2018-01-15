@@ -8,9 +8,9 @@
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{10\%}& \multicolumn{2}{|c}{25\%}& \multicolumn{2}{|c}{50\%}& \multicolumn{2}{|c}{75\%}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step1 & $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\ 
-			Step2 & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
-			Step3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\ 
+			Step 1 & $ 89 \pm 1 $ & $ 92 \pm 2 $ & $ 88 \pm 2 $ & $ 90 \pm 2 $ & $ 81 \pm 3 $ & $ 84 \pm 3 $ & $ 62 \pm 3 $ & $ 63 \pm 4 $ \\ 
+			Step 2 & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 92 \pm 1 $ & $ 94 \pm 2 $ & $ 85 \pm 2 $ & $ 87 \pm 2 $ & $ 64 \pm 3 $ & $ 65 \pm 3 $ \\ 
+			Step 3 & $ 92 \pm 1 $ & $ 92 \pm 2 $ & $ 91 \pm 1 $ & $ 91 \pm 2 $ & $ 80 \pm 2 $ & $ 80 \pm 3 $ & $ 42 \pm 4 $ & $ 42 \pm 4 $ \\ 
 		\end{tabular}
 		\caption{Precision and recall for 10\%, 25\%, 50\% and 75\% overlap of true \gls{tmh} and predicted \gls{tmh}.}
 		\label{tab:overlap}
@@ -20,9 +20,9 @@
 		\begin{tabular}{l|c|c|c|c|c|c|c|c} 
 			Model & \multicolumn{2}{|c}{Below 10}& \multicolumn{2}{|c}{Below 5}& \multicolumn{2}{|c}{Below 2}& \multicolumn{2}{|c}{Equal 0}\\ 
 			& Precis & Recall & Precis & Recall & Precis & Recall & Precis & Recall \\ \hline 
-			Step1 & $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
-			Step2 & $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
-			Step3 & $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
+			Step 1 & $ 80 \pm 3 $ & $ 82 \pm 3 $ & $ 64 \pm 3 $ & $ 66 \pm 3 $ & $ 26 \pm 3 $ & $ 27 \pm 4 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			Step 2 & $ 84 \pm 2 $ & $ 86 \pm 2 $ & $ 67 \pm 3 $ & $ 69 \pm 3 $ & $ 27 \pm 3 $ & $ 28 \pm 3 $ & $  2 \pm 1 $ & $  2 \pm 1 $ \\ 
+			Step 3 & $ 77 \pm 2 $ & $ 77 \pm 3 $ & $ 49 \pm 3 $ & $ 49 \pm 4 $ & $ 18 \pm 2 $ & $ 18 \pm 2 $ & $  1 \pm 1 $ & $  1 \pm 1 $ \\ 
 		\end{tabular}
 		\caption{Precision and recall for endpoints difference between true 
 			\gls{tmh} and predicted \gls{tmh} below or equal to 10, 5, 2 and 0.}
@@ -74,10 +74,10 @@ model.
 	\centering 
 	\begin{tabular}{l|c|c} 
 		Model & Precision & Recall \\ \hline
-		Step1 & $64 \pm 3$ & $66 \pm 4$ \\ 
-		Step2 & $67 \pm 3$ & $69 \pm 3$ \\ 
-		Step3 & $49 \pm 3$ & $49 \pm 4$ \\
-		HMM   & $52 \pm 0$ & $29 \pm 0$ \\
+		Step 1 & $64 \pm 3$ & $66 \pm 4$ \\ 
+		Step 2 & $67 \pm 3$ & $69 \pm 3$ \\ 
+		Step 3 & $49 \pm 3$ & $49 \pm 4$ \\
+		HMM   & $34 \pm 0$ & $13 \pm 0$ \\ 
 		TMSEG\cite{tmseg} & $87 \pm 3$ & $84 \pm 3$
 	\end{tabular}
     \caption{Precision and recall for 50\% overlap and endpoints difference below 5.}
@@ -87,13 +87,46 @@ model.
 In Table \ref{tab:pr50} is the precision and recall from using the same 
 measurement as used by TMSEG. It also shows how the model compares with 
 other models. TMSEG is a lot better at both precision and recall, 
-but both step 1 and step 2 is a big improvement to the simple \gls{hmm}
+but the model is a big improvement to the simple \gls{hmm}
 based model. 
 
 \subsection{Running time}
+\label{sec:time}
 
-% Step 1 796s
-% Step 3 73s
+%Inference time for step 1: 1.6142690181732178
+%Inference time for step 2: 0.0045070648193359375
+%Inference time for step 3: 2.752535581588745
+%Training time for step 1: 800.2764098644257
+%Training time for step 3: 1267.4366292953491
+
+%Training time: 0.049510955810546875
+%Decoding time: 0.8011248111724854
+
+\begin{table}
+	\centering 
+	\begin{tabular}{l|c|c} 
+		Model & Training & Inference \\ \hline
+		Step 1 & 800 & 1.61 \\ 
+		Step 2 & - & 0.005 \\ 
+		Step 3 & 1267 & 2.75 \\
+		HMM   & 0.0495 & 0.80
+	\end{tabular}
+	\caption{Training and inference timings for the different steps 
+		and for a \gls{hmm}. All numbers in seconds. Training was done
+		on the three first subset and inference was done on the last.}
+	\label{tab:time}
+\end{table}
+
+Table \ref{tab:time} contains timings of the training and inference of each 
+step of the model and of the simple \gls{hmm}. It takes a lot longer to train 
+step 1 and step 3 than it does to use them to inference. 
+It takes a lot longer to use the \gls{hmm} for inference than it does to train
+it but it is still faster than the \glspl{lstm}. Since training only have to be
+done once and the trained model can be saved and used later, the slow training 
+time is not a huge disadvantages in comparison with other models. The inference
+time is more important, because that is the time that is relevant if the model 
+was to be used, and while it is also slower than the \gls{hmm} for inference,
+it is not much slower.
 
 \subsection{Discussion}
 % What have we achieved? 

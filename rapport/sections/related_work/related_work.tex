@@ -8,13 +8,19 @@
 		% At TM prediction er muligt og kan gøres "simpelt" med HMM
 % 
 % i TMSEG nævnes MEMSAT. måske skal vi skrive noget om den
-
 % Der var en artikel der hedder HTP der virker interressant
-
 % Hvilke modeller eksisterer allerede og bliver brugt pt. 
 
+A lot of different approaches have been proposed to solve the problem, different types of machine 
+learning but also non machine learning approaches like the one proposed in \cite{Heijne2} where 
+where they use hydrophobicity analysis to predict the structure. For machine learning based 
+approaches is there a wide range of models, from TMHMM \cite{tmhmm}, where they used a \gls{hmm},
+over \gls{svm} based models like MEMSAT-SVM \cite{memsat-svm}, to models like MEMSAT3 \cite{memsat3}
+and TMSEG \cite{tmseg} which used \glspl{ann}. TMSEG also used different machine learning methods 
+and is the model with the best results from those listed here and is explained more in next section.
+
 \subsubsection{TMSEG}
-In TMSEG\cite{tmseg} they divide the problem into four sub problems, called steps. 
+In TMSEG they divide the problem into four sub problems, called steps. 
 Most notable is the separation of the prediction of the \glspl{tmh} and the inside/outside topology. 
 
 In the first step they assigns a probability distribution of \gls{tmh}, signal peptide and non-transmembrane 
@@ -38,8 +44,8 @@ side is inside and which is outside.
 \subsection{Long Short-Term Memory Network}
 %Find nogle artikler der laver noget nice med lstm
 
-A lot af recent exiting advances in areas where the data is inherently sequence based 
-have been done with \glspl{lstm}. Areas such as language modelling \cite{JozefowiczEtAl, ShazeerEtAl},
+A lot af recent exiting advances in areas where the data is sequence based 
+has been done with \glspl{lstm}. Areas such as language modelling \cite{JozefowiczEtAl, ShazeerEtAl},
 speech recognition \cite{XiongEtAl}, machine translation \cite{WuEtAl} and many more, have had the 
 state of the art moved by the use of \glspl{lstm}. 
 
@@ -51,6 +57,5 @@ In \cite{JozefowiczEtAl} they explore different model architectures for language
 on very large datasets, and comes to the conclusion that \glspl{lstm} is the best of the models
 they tried and the bigger layers they used, the better results they got. Most of their work is
 in decreasing the number of computations necessary to train such large \glspl{lstm}. 
-Amongst other they used a approximation of the softmax layer. Due to the large number of 
-classes in langauge modelling the softmax layer becomes very large and have a large influence 
-on the number of computations. 
+ 
+ 
