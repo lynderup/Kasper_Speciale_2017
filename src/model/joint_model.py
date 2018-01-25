@@ -104,7 +104,7 @@ def build_data_input_step3(dataprovider):
 
 
 def name_from_config(step_config):
-    name = "learn_" + str(step_config.starting_learning_rate) + \
+    name = "l2_beta_" + str(step_config.l2_beta) + \
            "_units_" + str(step_config.num_units) + \
            "_steps_" + str(step_config.train_steps)
     return name

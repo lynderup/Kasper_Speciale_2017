@@ -155,22 +155,22 @@ class Statistics:
 
         self.evaluators.append(("Endpoint below 5", compare_prediction.endpoints_diff_below_5_overlap_over_50_percent))
         # self.evaluators.append(("Overlap 25%", compare_prediction.overlap_over_25_percent))
-        self.evaluators.append(("Char", "char_compare"))
+        # self.evaluators.append(("Char", "char_compare"))
 
         self.multiple_evaluators = []
 
-        overlap_evals = [("10%", compare_prediction.overlap_over_x(10)),
-                         ("25%", compare_prediction.overlap_over_x(25)),
-                         ("50%", compare_prediction.overlap_over_x(50)),
-                         ("75%", compare_prediction.overlap_over_x(75))]
-
-        endpoint_evals = [("Below 10", compare_prediction.endpoint_diff_below_x(10)),
-                          ("Below 5", compare_prediction.endpoint_diff_below_x(5)),
-                          ("Below 2", compare_prediction.endpoint_diff_below_x(2)),
-                          ("Equal 0", compare_prediction.endpoint_diff_below_x(0))]
-
-        self.multiple_evaluators.append(("Overlap", overlap_evals))
-        self.multiple_evaluators.append(("Endpoint", endpoint_evals))
+        # overlap_evals = [("10%", compare_prediction.overlap_over_x(10)),
+        #                  ("25%", compare_prediction.overlap_over_x(25)),
+        #                  ("50%", compare_prediction.overlap_over_x(50)),
+        #                  ("75%", compare_prediction.overlap_over_x(75))]
+        #
+        # endpoint_evals = [("Below 10", compare_prediction.endpoint_diff_below_x(10)),
+        #                   ("Below 5", compare_prediction.endpoint_diff_below_x(5)),
+        #                   ("Below 2", compare_prediction.endpoint_diff_below_x(2)),
+        #                   ("Equal 0", compare_prediction.endpoint_diff_below_x(0))]
+        #
+        # self.multiple_evaluators.append(("Overlap", overlap_evals))
+        # self.multiple_evaluators.append(("Endpoint", endpoint_evals))
 
     def add_model(self, model):
         self.models.append(model)
