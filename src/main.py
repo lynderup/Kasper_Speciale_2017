@@ -10,9 +10,9 @@ if __name__ == '__main__':
     # cross_validation.do_3_fold_cross_validation()
 
     statistics_dataset_size = experiments.dataset_size_test()
-    statistics_units = experiments.test_hyperparams("units")
-    statistics_l2_beta = experiments.test_hyperparams("l2_beta")
+    # statistics_units = experiments.test_hyperparams("units")
+    # statistics_l2_beta = experiments.test_hyperparams("l2_beta")
 
     statistics_dataset_size.print_statistics()
-    statistics_units.print_statistics()
-    statistics_l2_beta.print_predictions()
+    # statistics_units.print_statistics()
+    # statistics_l2_beta.print_predictions()

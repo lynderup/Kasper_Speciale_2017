@@ -192,9 +192,10 @@ def test_hyperparams(which_param):
         for i in range(3):
             m = joint_model.Model(logdir=logdir, config=new_model_config, dataprovider=dataprovider)
 
-            step1_logdir = m.train_step1()
+            # step1_logdir = m.train_step1()
 
             # step1_logdir = "test/step1/test_model/"
+            step1_logdir = "test/step1/" + joint_model.name_from_config(new_step1_config) + "/"
             step3_logdir = None
             runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 
@@ -227,7 +228,7 @@ def dataset_size_test():
     for i, trainset_test in enumerate(trainset_tests):
         runs = []
 
-        for trainset in trainset_test:
+        for j, trainset in enumerate(trainset_test):
 
             dataprovider = joint_dataprovider.Dataprovider(trainset=trainset,
                                                            validationset=validationset,
@@ -235,9 +236,10 @@ def dataset_size_test():
 
             m = joint_model.Model(logdir=logdir, config=model_config, dataprovider=dataprovider)
 
-            step1_logdir = m.train_step1()
+            # step1_logdir = m.train_step1()
 
             # step1_logdir = "test/step1/test_model/"
+            step1_logdir = "size_test/step1/" + joint_model.name_from_config(step1_config) + "_" + str((i * 3) + j) + "/"
             step3_logdir = None
             runs.append(m.inference(step1_logdir=step1_logdir, step3_logdir=step3_logdir))
 

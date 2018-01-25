@@ -219,7 +219,7 @@ TMSEG per protein:& $\sim$300ms
 \againframe<2>{tmp}
 
 \begin{frame}
-\frametitle{Hyper parameters}
+\frametitle{Hyper parameters - Model size}
 \begin{columns}
 	\begin{column}{0.5\textwidth}
 		\begin{tabular}{l|c|c} 
@@ -237,6 +237,38 @@ TMSEG per protein:& $\sim$300ms
 		\end{center}
 	\end{column}
 \end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Hyper parameters - Regularization}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+
+	\end{column}
+	\begin{column}{0.5\textwidth}
+		\begin{center}
+			\includegraphics[width=\textwidth]{}
+		\end{center}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Hyper parameters - Dataset size}
+\begin{tabular}{l|c|c}
+	Model & Precision & Recall \\ \hline
+	Subsets used=1 & $67 \pm 4$ & $71 \pm 6$ \\
+	Subsets used=2 & $68 \pm 2$ & $70 \pm 2$ \\
+	Subsets used=3 & $68 \pm 1$ & $71 \pm 1$ \\
+\end{tabular}
+\end{frame}
+
+\begin{frame}
+\frametitle{Hyper parameters - Dataset size}
+\centering
+\includegraphics[width=\textwidth]{dataset_size_train.png}
+
+\includegraphics[width=\textwidth]{dataset_size_validation.png}
 \end{frame}
 
 \end{document}
